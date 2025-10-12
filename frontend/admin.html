@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админка Calistor</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .admin-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-form,
+        .product-form {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px 0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #0077bb;
+        }
+
+        .product-list {
+            margin-top: 30px;
+        }
+
+        .product-item {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-info h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .product-price {
+            font-weight: bold;
+            color: #0088cc;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+        }
+
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: #ff4757;
+            margin: 10px 0;
+        }
+
+        .success {
+            color: #2ed573;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <h1>👑 Админка Calistor</h1>
+
+        <!-- Форма входа -->
+        <div id="login-section" class="login-form">
+            <h2>Вход в админку</h2>
+            <input type="password" id="admin-token" placeholder="Введите секретный токен">
+            <button onclick="login()">Войти</button>
+            <div id="login-message"></div>
+        </div>
+
+        <!-- Основной интерфейс админки -->
+        <div id="admin-section" class="hidden">
+            <!-- Форма добавления товара -->
+            <div class="product-form">
+                <h2>➕ Добавить новый товар</h2>
+                <input type="text" id="product-name" placeholder="Название товара" required>
+                <input type="number" id="product-price" placeholder="Цена (в рублях)" required>
+                <input type="text" id="product-color" placeholder="Цвет" required>
+                <select id="product-size" required>
+                    <option value="">Выберите размер</option>
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="one size">One Size</option>
+                </select>
+                <input type="text" id="product-composition" placeholder="Состав (например: 100% хлопок)" required>
+                <textarea id="product-description" placeholder="Описание товара" rows="3" required></textarea>
+                <<input type="file" id="product-images" accept="image/*" multiple max="7" required>
+                    <small>Можно выбрать до 7 изображений</small>
+                    <button onclick="addProduct()">Добавить товар</button>
+                    <div id="form-message"></div>
+            </div>
+
+            <!-- Список товаров -->
+            <div class="product-list">
+                <h2>📦 Список товаров</h2>
+                <div id="products-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let adminToken = '';
+
+        // Функция входа
+        async function login() {
+            const token = document.getElementById('admin-token').value;
+            const messageDiv = document.getElementById('login-message');
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    adminToken = token;
+                    document.getElementById('login-section').classList.add('hidden');
+                    document.getElementById('admin-section').classList.remove('hidden');
+                    messageDiv.innerHTML = '<div class="success">Успешный вход!</div>';
+                    loadProducts();
+                } else {
+                    messageDiv.innerHTML = `<div class="error">${data.detail}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">Ошибка соединения</div>';
+            }
+        }
+
+        // Функция добавления товара
+        async function addProduct() {
+            const files = document.getElementById('product-images').files;
+            if (files.length === 0) {
+                alert('Пожалуйста, выберите хотя бы одно изображение');
+                return;
+            }
+            if (files.length > 7) {
+                alert('Можно загрузить не более 7 изображений');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('token', adminToken);
+            formData.append('name', document.getElementById('product-name').value);
+            formData.append('price', parseInt(document.getElementById('product-price').value));
+            formData.append('color', document.getElementById('product-color').value);
+            formData.append('size', document.getElementById('product-size').value);
+            formData.append('composition', document.getElementById('product-composition').value);
+            formData.append('description', document.getElementById('product-description').value);
+
+            // Добавляем все файлы
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+
+            const messageDiv = document.getElementById('form-message');
+
+            try {
+                const response = await fetch('/api/admin/products', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.innerHTML = `<div class="success">Товар успешно добавлен! Загружено ${files.length} изображений</div>`;
+                    // Очищаем форму
+                    document.getElementById('product-name').value = '';
+                    document.getElementById('product-price').value = '';
+                    document.getElementById('product-color').value = '';
+                    document.getElementById('product-size').value = '';
+                    document.getElementById('product-composition').value = '';
+                    document.getElementById('product-description').value = '';
+                    document.getElementById('product-images').value = '';
+
+                    loadProducts();
+                } else {
+                    messageDiv.innerHTML = `<div class="error">${data.detail}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">Ошибка при добавлении товара</div>';
+            }
+        }
+
+        // Функция загрузки товаров
+        async function loadProducts() {
+            try {
+                const response = await fetch(`/api/admin/products?token=${adminToken}`);
+                const products = await response.json();
+
+                const container = document.getElementById('products-container');
+                container.innerHTML = products.map(product => `
+                    <div class="product-item">
+                        <div class="product-info">
+                            <h3>${product.name}</h3>
+                            <p>Цвет: ${product.color} | Размер: ${product.size}</p>
+                            <p class="product-price">${product.price}₽</p>
+                        </div>
+                        <button class="delete-btn" onclick="deleteProduct(${product.id})">Удалить</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Ошибка загрузки товаров:', error);
+            }
+        }
+
+        // Функция удаления товара
+        async function deleteProduct(productId) {
+            if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/products/${productId}?token=${adminToken}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadProducts(); // Обновляем список
+                } else {
+                    alert('Ошибка при удалении товара');
+                }
+            } catch (error) {
+                alert('Ошибка соединения');
+            }
+        }
+    </script>
+</body>
+
+</html>

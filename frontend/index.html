@@ -23,12 +23,15 @@
                 <h1>calistor</h1>
                 <p>digital minimalism <br> street wear born in Ufa</p>
                 <div class="p2">for you</div>
-                <button class="b1" onclick="openCart()">корзина <span id="cart-count">0</span></button>
+                <div class="header-buttons">
+                    <button class="b1" onclick="openCart()">корзина <span id="cart-count">0</span></button>
+                </div>
             </div>
         </header>
 
         <main id="product-list"></main>
     </div>
+
     <!-- Страница товара -->
     <div id="product-page" class="page">
         <header class="product-header">
@@ -39,12 +42,13 @@
         <div class="product-detail">
             <div class="product-gallery">
                 <img id="product-main-image" src="" alt="">
+                <div class="product-thumbnails" id="product-thumbnails"></div>
             </div>
-            
+
             <div class="product-info">
                 <h1 id="product-title"></h1>
                 <p class="product-price" id="product-price"></p>
-                
+
                 <div class="size-selector">
                     <h3>Размер:</h3>
                     <div class="sizes" id="size-buttons">
@@ -61,8 +65,10 @@
                     <p><strong>Состав:</strong> <span id="product-composition"></span></p>
                 </div>
 
-                <button class="add-to-cart-btn" onclick="addToCartFromDetail()">Добавить в корзину</button>
-                
+                <div class="product-actions">
+                    <button class="add-to-cart-btn" onclick="addToCartFromDetail()">Добавить в корзину</button>
+                </div>
+
                 <div class="product-description">
                     <h3>Описание</h3>
                     <p id="product-description-text"></p>
@@ -80,12 +86,12 @@
 
         <div class="cart-content">
             <div id="cart-items"></div>
-            
+
             <div class="cart-total">
                 <h3>Итого: <span id="total-price">0</span>₽</h3>
                 <button class="checkout-btn" onclick="checkout()">Оформить заказ</button>
             </div>
-            
+
             <div id="empty-cart" class="empty-cart">
                 <p>Корзина пуста</p>
             </div>

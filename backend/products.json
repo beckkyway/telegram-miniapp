@@ -1,0 +1,111 @@
+[
+  {
+    "id": 3,
+    "name": "футболка",
+    "price": 10000,
+    "color": "белый",
+    "size": "",
+    "image": "/static/images/products/product-3.jpg",
+    "image_large": "/static/images/products/product-3.jpg",
+    "composition": "1000 проц хлоп",
+    "description": "бульмень"
+  },
+  {
+    "id": 4,
+    "name": "кофта",
+    "price": 1234,
+    "color": "белый",
+    "size": "",
+    "image": "/static/images/products/product-4-small.webp",
+    "image_large": "/static/images/products/product-4-large.webp",
+    "composition": "100% хлоп",
+    "description": "алалалала"
+  },
+  {
+    "id": 5,
+    "name": "fsdsdf",
+    "price": 2222,
+    "color": "fasfa",
+    "size": "",
+    "image": "/static/images/products/product-5-small.webp",
+    "image_large": "/static/images/products/product-5-large.webp",
+    "composition": "fdewefew",
+    "description": "ewfewfgw"
+  },
+  {
+    "id": 6,
+    "name": "боб",
+    "price": 2,
+    "color": "б",
+    "size": "",
+    "image": "/static/images/products/product-6-small.webp",
+    "image_large": "/static/images/products/product-6-large.webp",
+    "composition": "1000",
+    "description": "ууфывав"
+  },
+  {
+    "id": 7,
+    "name": "папиии",
+    "price": 223,
+    "color": "чер",
+    "size": "",
+    "image": "/static/images/products/product-7-small.webp",
+    "image_large": "/static/images/products/product-7-large.webp",
+    "composition": "100 хлоп",
+    "description": "ыфвцй"
+  },
+  {
+    "id": 9,
+    "name": "вцйцвцй",
+    "price": 222,
+    "color": "цйвй",
+    "size": "",
+    "images": [
+      "/static/images/products/product-9-1-small.webp",
+      "/static/images/products/product-9-2-small.webp",
+      "/static/images/products/product-9-3-small.webp",
+      "/static/images/products/product-9-4-small.webp",
+      "/static/images/products/product-9-5-small.webp",
+      "/static/images/products/product-9-6-small.webp"
+    ],
+    "images_large": [
+      "/static/images/products/product-9-1-large.webp",
+      "/static/images/products/product-9-2-large.webp",
+      "/static/images/products/product-9-3-large.webp",
+      "/static/images/products/product-9-4-large.webp",
+      "/static/images/products/product-9-5-large.webp",
+      "/static/images/products/product-9-6-large.webp"
+    ],
+    "image": "/static/images/products/product-9-1-small.webp",
+    "image_large": "/static/images/products/product-9-1-large.webp",
+    "composition": "111 хл",
+    "description": "афвывыавы"
+  },
+  {
+    "id": 10,
+    "name": "вцйцвцй",
+    "price": 222,
+    "color": "цйвй",
+    "size": "",
+    "images": [
+      "/static/images/products/product-10-1-small.webp",
+      "/static/images/products/product-10-2-small.webp",
+      "/static/images/products/product-10-3-small.webp",
+      "/static/images/products/product-10-4-small.webp",
+      "/static/images/products/product-10-5-small.webp",
+      "/static/images/products/product-10-6-small.webp"
+    ],
+    "images_large": [
+      "/static/images/products/product-10-1-large.webp",
+      "/static/images/products/product-10-2-large.webp",
+      "/static/images/products/product-10-3-large.webp",
+      "/static/images/products/product-10-4-large.webp",
+      "/static/images/products/product-10-5-large.webp",
+      "/static/images/products/product-10-6-large.webp"
+    ],
+    "image": "/static/images/products/product-10-1-small.webp",
+    "image_large": "/static/images/products/product-10-1-large.webp",
+    "composition": "111 хл",
+    "description": "афвывыавы"
+  }
+]
