@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +13,7 @@
         }
 
         .admin-container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -22,17 +21,14 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .login-form,
-        .product-form {
+        .login-form, .product-form, .stats-section {
             margin-bottom: 30px;
             padding: 20px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
         }
 
-        input,
-        textarea,
-        select {
+        input, textarea, select {
             width: 100%;
             padding: 10px;
             margin: 5px 0 15px 0;
@@ -49,17 +45,18 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            margin: 5px;
         }
 
         button:hover {
             background: #0077bb;
         }
 
-        .product-list {
+        .product-list, .stats-grid {
             margin-top: 30px;
         }
 
-        .product-item {
+        .product-item, .stat-card {
             border: 1px solid #eee;
             padding: 15px;
             margin: 10px 0;
@@ -67,6 +64,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            display: block;
         }
 
         .product-info h3 {
@@ -77,6 +79,21 @@
         .product-price {
             font-weight: bold;
             color: #0088cc;
+        }
+
+        .sizes-info {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .size-tag {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin: 2px;
+            font-size: 12px;
         }
 
         .delete-btn {
@@ -100,9 +117,80 @@
             color: #2ed573;
             margin: 10px 0;
         }
+
+        /* Стили для управления размерами */
+        .sizes-section {
+            margin: 15px 0;
+        }
+
+        .size-checkbox {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+
+        .size-quantity {
+            width: 80px;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .size-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        /* Статистика */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0088cc;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            margin: 0;
+            border-radius: 0;
+            color: #666;
+        }
+
+        .tab-btn.active {
+            background: #0088cc;
+            color: white;
+        }
     </style>
 </head>
-
 <body>
     <div class="admin-container">
         <h1>👑 Админка Calistor</h1>
@@ -117,39 +205,146 @@
 
         <!-- Основной интерфейс админки -->
         <div id="admin-section" class="hidden">
-            <!-- Форма добавления товара -->
-            <div class="product-form">
-                <h2>➕ Добавить новый товар</h2>
-                <input type="text" id="product-name" placeholder="Название товара" required>
-                <input type="number" id="product-price" placeholder="Цена (в рублях)" required>
-                <input type="text" id="product-color" placeholder="Цвет" required>
-                <select id="product-size" required>
-                    <option value="">Выберите размер</option>
-                    <option value="XS">XS</option>
-                    <option value="S">S</option>
-                    <option value="M">M</option>
-                    <option value="L">L</option>
-                    <option value="XL">XL</option>
-                    <option value="one size">One Size</option>
-                </select>
-                <input type="text" id="product-composition" placeholder="Состав (например: 100% хлопок)" required>
-                <textarea id="product-description" placeholder="Описание товара" rows="3" required></textarea>
-                <<input type="file" id="product-images" accept="image/*" multiple max="7" required>
+            <!-- Табы -->
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="showTab('products')">📦 Управление товарами</button>
+                <button class="tab-btn" onclick="showTab('statistics')">📊 Статистика</button>
+            </div>
+
+            <!-- Вкладка товаров -->
+            <div id="products-tab">
+                <!-- Форма добавления товара -->
+                <div class="product-form">
+                    <h2>➕ Добавить новый товар</h2>
+                    <input type="text" id="product-name" placeholder="Название товара" required>
+                    <input type="number" id="product-price" placeholder="Цена (в рублях)" required>
+                    <input type="text" id="product-color" placeholder="Цвет" required>
+                    
+                    <!-- Управление размерами -->
+                    <div class="sizes-section">
+                        <h3>📏 Доступные размеры и количество:</h3>
+                        <div id="sizes-container">
+                            <!-- Размеры будут добавляться динамически -->
+                        </div>
+                    </div>
+
+                    <input type="text" id="product-composition" placeholder="Состав (например: 100% хлопок)" required>
+                    <textarea id="product-description" placeholder="Описание товара" rows="3" required></textarea>
+                    <input type="file" id="product-images" accept="image/*" multiple max="7" required>
                     <small>Можно выбрать до 7 изображений</small>
                     <button onclick="addProduct()">Добавить товар</button>
                     <div id="form-message"></div>
+                </div>
+
+                <!-- Список товаров -->
+                <div class="product-list">
+                    <h2>📦 Список товаров</h2>
+                    <div id="products-container"></div>
+                </div>
             </div>
 
-            <!-- Список товаров -->
-            <div class="product-list">
-                <h2>📦 Список товаров</h2>
-                <div id="products-container"></div>
+            <!-- Вкладка статистики -->
+            <div id="statistics-tab" class="hidden">
+                <div class="stats-section">
+                    <h2>📊 Общая статистика</h2>
+                    <div class="stats-overview" id="stats-overview">
+                        <!-- Статистика загружается динамически -->
+                    </div>
+                    
+                    <h3>📋 Детальная статистика по товарам</h3>
+                    <div id="detailed-stats">
+                        <!-- Детальная статистика загружается динамически -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         let adminToken = '';
+        const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'one size'];
+
+        // Переключение вкладок
+        function showTab(tabName) {
+            // Скрываем все вкладки
+            document.getElementById('products-tab').classList.add('hidden');
+            document.getElementById('statistics-tab').classList.add('hidden');
+            
+            // Убираем активный класс со всех кнопок
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Показываем нужную вкладку и активируем кнопку
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            // Если перешли на вкладку статистики - загружаем данные
+            if (tabName === 'statistics') {
+                loadStatistics();
+            }
+        }
+
+        // Инициализация управления размерами
+        function initSizeManager() {
+            const container = document.getElementById('sizes-container');
+            container.innerHTML = '';
+            
+            allSizes.forEach(size => {
+                const sizeDiv = document.createElement('div');
+                sizeDiv.className = 'size-item';
+                sizeDiv.innerHTML = `
+                    <label class="size-checkbox">
+                        <input type="checkbox" value="${size}" onchange="toggleSizeQuantity('${size}')">
+                        ${size}
+                    </label>
+                    <input type="number" 
+                           id="quantity-${size}" 
+                           class="size-quantity hidden" 
+                           placeholder="Кол-во" 
+                           min="0" 
+                           value="0"
+                           onchange="validateQuantity('${size}')">
+                `;
+                container.appendChild(sizeDiv);
+            });
+        }
+
+        // Переключение поля количества для размера
+        function toggleSizeQuantity(size) {
+            const checkbox = document.querySelector(`input[value="${size}"]`);
+            const quantityInput = document.getElementById(`quantity-${size}`);
+            
+            if (checkbox.checked) {
+                quantityInput.classList.remove('hidden');
+                quantityInput.value = '1';
+            } else {
+                quantityInput.classList.add('hidden');
+                quantityInput.value = '0';
+            }
+        }
+
+        // Валидация количества
+        function validateQuantity(size) {
+            const input = document.getElementById(`quantity-${size}`);
+            if (input.value < 0) {
+                input.value = 0;
+            }
+        }
+
+        // Получение данных о размерах
+        function getSizesData() {
+            const sizesData = {};
+            allSizes.forEach(size => {
+                const checkbox = document.querySelector(`input[value="${size}"]`);
+                const quantityInput = document.getElementById(`quantity-${size}`);
+                
+                if (checkbox.checked && quantityInput.value > 0) {
+                    sizesData[size] = parseInt(quantityInput.value);
+                }
+            });
+            return sizesData;
+        }
 
         // Функция входа
         async function login() {
@@ -172,6 +367,7 @@
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('admin-section').classList.remove('hidden');
                     messageDiv.innerHTML = '<div class="success">Успешный вход!</div>';
+                    initSizeManager();
                     loadProducts();
                 } else {
                     messageDiv.innerHTML = `<div class="error">${data.detail}</div>`;
@@ -193,16 +389,21 @@
                 return;
             }
 
+            const sizesData = getSizesData();
+            if (Object.keys(sizesData).length === 0) {
+                alert('Пожалуйста, выберите хотя бы один размер с количеством');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('token', adminToken);
             formData.append('name', document.getElementById('product-name').value);
             formData.append('price', parseInt(document.getElementById('product-price').value));
             formData.append('color', document.getElementById('product-color').value);
-            formData.append('size', document.getElementById('product-size').value);
             formData.append('composition', document.getElementById('product-composition').value);
             formData.append('description', document.getElementById('product-description').value);
+            formData.append('available_sizes', JSON.stringify(sizesData));
 
-            // Добавляем все файлы
             for (let i = 0; i < files.length; i++) {
                 formData.append('images', files[i]);
             }
@@ -223,11 +424,11 @@
                     document.getElementById('product-name').value = '';
                     document.getElementById('product-price').value = '';
                     document.getElementById('product-color').value = '';
-                    document.getElementById('product-size').value = '';
                     document.getElementById('product-composition').value = '';
                     document.getElementById('product-description').value = '';
                     document.getElementById('product-images').value = '';
-
+                    
+                    initSizeManager();
                     loadProducts();
                 } else {
                     messageDiv.innerHTML = `<div class="error">${data.detail}</div>`;
@@ -248,14 +449,61 @@
                     <div class="product-item">
                         <div class="product-info">
                             <h3>${product.name}</h3>
-                            <p>Цвет: ${product.color} | Размер: ${product.size}</p>
-                            <p class="product-price">${product.price}₽</p>
+                            <p>Цвет: ${product.color} | Цена: ${product.price}₽</p>
+                            <div class="sizes-info">
+                                <strong>Общее количество: ${Object.values(product.available_sizes || {}).reduce((a, b) => a + b, 0)} шт.</strong><br>
+                                ${Object.entries(product.available_sizes || {}).map(([size, qty]) => 
+                                    `<span class="size-tag">${size}: ${qty} шт.</span>`).join('')}
+                            </div>
                         </div>
                         <button class="delete-btn" onclick="deleteProduct(${product.id})">Удалить</button>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Ошибка загрузки товаров:', error);
+            }
+        }
+
+        // Функция загрузки статистики
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`/api/admin/statistics?token=${adminToken}`);
+                const stats = await response.json();
+
+                // Общая статистика
+                const overviewContainer = document.getElementById('stats-overview');
+                overviewContainer.innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-number">${stats.total_products}</div>
+                        <div class="stat-label">Всего товаров</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${stats.total_items}</div>
+                        <div class="stat-label">Всего единиц</div>
+                    </div>
+                    ${Object.entries(stats.size_breakdown).map(([size, count]) => `
+                        <div class="stat-item">
+                            <div class="stat-number">${count}</div>
+                            <div class="stat-label">Размер ${size}</div>
+                        </div>
+                    `).join('')}
+                `;
+
+                // Детальная статистика по товарам
+                const detailedContainer = document.getElementById('detailed-stats');
+                detailedContainer.innerHTML = stats.products_stats.map(product => `
+                    <div class="stat-card">
+                        <h4>${product.name} (ID: ${product.id})</h4>
+                        <p><strong>Общее количество: ${product.total} шт.</strong></p>
+                        <div class="sizes-info">
+                            ${Object.entries(product.sizes).map(([size, qty]) => 
+                                `<span class="size-tag">${size}: ${qty} шт.</span>`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
             }
         }
 
@@ -271,7 +519,11 @@
                 });
 
                 if (response.ok) {
-                    loadProducts(); // Обновляем список
+                    loadProducts();
+                    // Если открыта вкладка статистики - обновляем её тоже
+                    if (!document.getElementById('statistics-tab').classList.contains('hidden')) {
+                        loadStatistics();
+                    }
                 } else {
                     alert('Ошибка при удалении товара');
                 }
@@ -279,7 +531,11 @@
                 alert('Ошибка соединения');
             }
         }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            initSizeManager();
+        });
     </script>
 </body>
-
 </html>

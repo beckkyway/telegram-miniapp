@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw
+import os
 
 def create_placeholder():
     """Создает placeholder изображение"""

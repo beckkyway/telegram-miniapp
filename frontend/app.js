@@ -75,13 +75,23 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 });
 
+// ========== ОБРАБОТЧИК РАЗМЕРОВ ==========
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('size-btn')) {
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        e.target.classList.add('selected');
+        selectedSize = e.target.dataset.size;
+    }
+});
+
 // ========== РЕНДЕР ТОВАРОВ ==========
 function renderProducts(products) {
     const container = document.getElementById("product-list");
     if (!container) return;
     
     container.innerHTML = products.map(product => {
-        // Берем первое изображение из массива или используем image
         const mainImage = product.images && product.images.length > 0 
             ? product.images[0] 
             : product.image;
@@ -116,8 +126,37 @@ function showProductDetail(product) {
     document.getElementById('product-price').textContent = `${product.price}₽`;
     document.getElementById('product-color').textContent = product.color;
     document.getElementById('product-composition').textContent = product.composition;
-    document.getElementById('product-main-image').src = product.image_large || product.image;
+    
+    // Устанавливаем главное изображение
+    const mainImages = product.images_large || [product.image_large];
+    document.getElementById('product-main-image').src = mainImages[0] || product.image;
+    
+    // Создаем галерею миниатюр если есть несколько изображений
+    const thumbnailsContainer = document.getElementById('product-thumbnails');
+    if (mainImages.length > 1) {
+        thumbnailsContainer.innerHTML = mainImages.map((img, index) => `
+            <img src="${img}" class="thumbnail ${index === 0 ? 'active' : ''}" 
+                 onclick="changeMainImage('${img}', this)">
+        `).join('');
+    } else {
+        thumbnailsContainer.innerHTML = '';
+    }
+    
     document.getElementById('product-description-text').textContent = product.description;
+    
+    // Динамически создаем кнопки размеров
+    const sizeButtonsContainer = document.getElementById('size-buttons');
+    if (sizeButtonsContainer) {
+        const availableSizes = product.sizes || [];
+        
+        if (availableSizes.length > 0) {
+            sizeButtonsContainer.innerHTML = availableSizes.map(size => `
+                <button class="size-btn" data-size="${size}">${size}</button>
+            `).join('');
+        } else {
+            sizeButtonsContainer.innerHTML = '<p>Нет доступных размеров</p>';
+        }
+    }
     
     // Сбрасываем выбор размера
     document.querySelectorAll('.size-btn').forEach(btn => {
@@ -128,41 +167,58 @@ function showProductDetail(product) {
     showPage('product');
 }
 
-// ========== ВЫБОР РАЗМЕРА ==========
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('size-btn')) {
-        document.querySelectorAll('.size-btn').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-        e.target.classList.add('selected');
-        selectedSize = e.target.dataset.size;
-    }
-});
+// Функция для смены главного изображения
+function changeMainImage(src, element) {
+    document.getElementById('product-main-image').src = src;
+    document.querySelectorAll('.thumbnail').forEach(thumb => {
+        thumb.classList.remove('active');
+    });
+    element.classList.add('active');
+}
 
 // ========== КОРЗИНА ==========
 function addToCartFromCard(productId) {
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
 
-    const cartItem = {
-        id: Date.now(),
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        size: 'M',
-        color: product.color,
-        image: product.image,
-        quantity: 1
-    };
+    const availableSizes = product.sizes || [];
+    
+    if (availableSizes.length === 1) {
+        const autoSize = availableSizes[0];
+        
+        const cartItem = {
+            id: Date.now(),
+            productId: product.id,
+            name: product.name,
+            price: product.price,
+            size: autoSize,
+            color: product.color,
+            image: product.image,
+            quantity: 1
+        };
 
-    cart.push(cartItem);
-    saveCart();
+        cart.push(cartItem);
+        saveCart();
 
-    tg.showPopup({
-        title: "Добавлено в корзину",
-        message: `${product.name} добавлен в корзину!`,
-        buttons: [{ type: "ok" }]
-    });
+        tg.showPopup({
+            title: "Добавлено в корзину",
+            message: `${product.name} (${autoSize}) добавлен в корзину!`,
+            buttons: [{ type: "ok" }]
+        });
+    } else if (availableSizes.length > 1) {
+        openProduct(productId);
+        tg.showPopup({
+            title: "Выберите размер",
+            message: "Пожалуйста, выберите размер товара",
+            buttons: [{ type: "ok" }]
+        });
+    } else {
+        tg.showPopup({
+            title: "Ошибка",
+            message: "Нет доступных размеров для этого товара",
+            buttons: [{ type: "ok" }]
+        });
+    }
 }
 
 function addToCartFromDetail() {
@@ -302,48 +358,4 @@ function checkout() {
             });
         }
     });
-}
-function showProductDetail(product) {
-    currentProduct = product;
-    selectedSize = null;
-    
-    // Заполняем данные
-    document.getElementById('product-title').textContent = product.name;
-    document.getElementById('product-price').textContent = `${product.price}₽`;
-    document.getElementById('product-color').textContent = product.color;
-    document.getElementById('product-composition').textContent = product.composition;
-    
-    // Устанавливаем главное изображение
-    const mainImages = product.images_large || [product.image_large];
-    document.getElementById('product-main-image').src = mainImages[0] || product.image;
-    
-    // Создаем галерею миниатюр если есть несколько изображений
-    const thumbnailsContainer = document.getElementById('product-thumbnails');
-    if (mainImages.length > 1) {
-        thumbnailsContainer.innerHTML = mainImages.map((img, index) => `
-            <img src="${img}" class="thumbnail ${index === 0 ? 'active' : ''}" 
-                 onclick="changeMainImage('${img}', this)">
-        `).join('');
-    } else {
-        thumbnailsContainer.innerHTML = '';
-    }
-    
-    document.getElementById('product-description-text').textContent = product.description;
-    
-    // Сбрасываем выбор размера
-    document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
-    
-    // Показываем страницу товара
-    showPage('product');
-}
-
-// Функция для смены главного изображения
-function changeMainImage(src, element) {
-    document.getElementById('product-main-image').src = src;
-    document.querySelectorAll('.thumbnail').forEach(thumb => {
-        thumb.classList.remove('active');
-    });
-    element.classList.add('active');
 }
