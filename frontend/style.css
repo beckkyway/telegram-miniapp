@@ -1,12 +1,25 @@
+/* =======================
+   MINIMAL THEME (APPLE STYLE)
+   ======================= */
+
 body {
-    font-family: 'Inter', sans-serif;
-    background: #f8f8f8;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f9f9f9;
     color: #111;
     margin: 0;
     padding: 0;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.3s ease;
 }
 
-/* Страницы */
+/* Общие стили */
+button {
+    font-family: inherit;
+}
+
+/* =======================
+   Страницы
+   ======================= */
 .page {
     display: none;
 }
@@ -15,7 +28,9 @@ body {
     display: block;
 }
 
-/* Баннер */
+/* =======================
+   Баннер
+   ======================= */
 .full-width-banner {
     width: 100%;
     height: 40vh;
@@ -23,136 +38,167 @@ body {
     max-height: 300px;
     overflow: hidden;
     position: relative;
+    border-bottom: 1px solid #eee;
 }
 
 .banner-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
+    filter: brightness(0.9);
+    transition: transform 0.6s ease;
 }
 
-/* Контент под баннером */
+.banner-image:hover {
+    transform: scale(1.02);
+}
+
+/* =======================
+   Контент под баннером
+   ======================= */
 .content-below-banner {
-    padding: 20px;
+    padding: 40px 20px;
     text-align: center;
-    background: #f7f7f7;
+    background: #fff;
+    border-bottom: 1px solid #eee;
 }
 
 .vitrin {
-    max-width: 400px;
+    max-width: 480px;
     margin: 0 auto;
 }
 
 .vitrin h1 {
     font-size: 32px;
-    margin-bottom: 8px;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #111;
+    margin-bottom: 12px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
 }
 
 .vitrin p {
     font-size: 14px;
-    margin-bottom: 12px;
-    line-height: 1.4;
     color: #666;
+    line-height: 1.5;
 }
 
 .p2 {
-    background: #0088cc;
+    background: #111;
     color: white;
     padding: 8px 16px;
-    border-radius: 20px;
+    border-radius: 100px;
     display: inline-block;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     font-size: 12px;
-    font-weight: bold;
+    letter-spacing: 0.5px;
 }
 
-/* Кнопки в шапке */
+/* =======================
+   Кнопки в шапке
+   ======================= */
 .header-buttons {
     display: flex;
     gap: 10px;
     justify-content: center;
     flex-wrap: wrap;
+    margin-top: 12px;
 }
 
 .b1 {
     background: #111;
-    color: white;
+    color: #fff;
     border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 12px 22px;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s ease;
+    font-weight: 500;
+    transition: all 0.25s ease;
 }
 
 .b1:hover {
     background: #333;
+    transform: translateY(-2px);
 }
 
-/* Сетка товаров */
+/* =======================
+   Сетка товаров
+   ======================= */
 #product-list {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    padding: 20px;
-    background: #f8f8f8;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 30px;
+    background: #f9f9f9;
 }
 
 .product {
     background: #fff;
-    border-radius: 12px;
-    padding: 10px;
+    border-radius: 16px;
+    padding: 14px;
     text-align: center;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s ease;
     cursor: pointer;
-    transition: transform 0.2s;
 }
 
 .product:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 }
 
+
+
 .product img {
+    /* Обязательно: занимает всю ширину карточки */
     width: 100%;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 8px;
+
+    /* Устанавливаем максимальную высоту, чтобы избежать слишком высоких фото 
+       (если они не строго квадратные) и делаем их блочными элементами */
+    display: block;
+
+    /* Добавляем закругление */
+    border-radius: 12px;
+
+    /* Отступ от названия товара */
+    margin-bottom: 10px;
+
+    /* УБРАТЬ: position: absolute; top: 0; left: 0; height: 100%; object-fit: cover; */
 }
 
 .product h3 {
-    margin: 8px 0;
-    font-size: 14px;
+    font-size: 15px;
+    margin-bottom: 6px;
+    font-weight: 500;
 }
 
 .product p {
-    margin: 4px 0;
-    color: #0088cc;
-    font-weight: bold;
+    color: #007aff;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
 
 .add-to-cart-small {
-    background: #0088cc;
+    background: #007aff;
     color: white;
     border: none;
     padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
+    border-radius: 8px;
     font-size: 12px;
-    margin-top: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
 }
 
-/* Шапка страниц */
+.add-to-cart-small:hover {
+    background: #005ecb;
+}
+
+/* =======================
+   Шапка страниц
+   ======================= */
 .product-header {
     display: flex;
     align-items: center;
     padding: 16px;
-    background: white;
+    background: #fff;
     border-bottom: 1px solid #eee;
 }
 
@@ -161,59 +207,65 @@ body {
     border: none;
     font-size: 18px;
     cursor: pointer;
+    color: #007aff;
+    margin-right: 12px;
     padding: 8px;
-    margin-right: 16px;
-    color: #0088cc;
+}
+
+.back-button:hover {
+    opacity: 0.7;
 }
 
 .product-header h2 {
-    margin: 0;
     font-size: 18px;
+    margin: 0;
 }
 
-/* Детали товара */
+/* =======================
+   Детали товара
+   ======================= */
 .product-detail {
-    padding: 0;
+    background: #f9f9f9;
+    min-height: 100vh;
 }
 
 .product-gallery {
-    background: white;
-    padding: 20px;
+    background: #fff;
+    padding: 24px;
     text-align: center;
 }
 
 #product-main-image {
     width: 100%;
-    max-width: 300px;
-    border-radius: 12px;
+    max-width: 340px;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
 
 .product-info {
-    padding: 20px;
-    background: white;
-    margin-top: 8px;
+    background: #fff;
+    margin-top: 10px;
+    padding: 24px;
+    border-radius: 16px 16px 0 0;
 }
 
 #product-title {
-    font-size: 20px;
-    margin-bottom: 8px;
+    font-size: 22px;
+    margin-bottom: 6px;
+    font-weight: 600;
 }
 
 .product-price {
-    font-size: 24px;
-    font-weight: bold;
-    color: #0088cc;
-    margin-bottom: 16px;
+    font-size: 26px;
+    color: #007aff;
+    font-weight: 700;
+    margin-bottom: 20px;
 }
 
 /* Выбор размера */
-.size-selector {
-    margin: 20px 0;
-}
-
 .size-selector h3 {
-    margin-bottom: 12px;
-    font-size: 16px;
+    font-size: 15px;
+    margin-bottom: 10px;
 }
 
 .sizes {
@@ -223,80 +275,95 @@ body {
 }
 
 .size-btn {
-    padding: 10px 16px;
-    border: 2px solid #e0e0e0;
-    background: white;
-    border-radius: 8px;
+    padding: 10px 18px;
+    border: 1.5px solid #ddd;
+    background: #fff;
+    border-radius: 10px;
     cursor: pointer;
-    font-weight: bold;
-    transition: all 0.2s;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+.size-btn:hover {
+    border-color: #007aff;
 }
 
 .size-btn.selected {
-    border-color: #0088cc;
-    background: #0088cc;
+    background: #007aff;
+    border-color: #007aff;
     color: white;
 }
 
+/* =======================
+   Метаданные и описание
+   ======================= */
 .product-meta {
-    background: #f8f8f8;
+    background: #f4f4f4;
     padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.product-meta p {
-    margin: 8px 0;
-}
-
-/* Кнопки действий */
-.product-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.add-to-cart-btn {
-    background: #0088cc;
-    color: white;
-    border: none;
-    padding: 16px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    width: 100%;
+    border-radius: 12px;
+    margin: 16px 0;
+    font-size: 14px;
+    color: #555;
 }
 
 .product-description h3 {
+    font-size: 16px;
     margin-bottom: 8px;
 }
 
 .product-description p {
     color: #666;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
-/* Корзина */
+/* =======================
+   Кнопки действий
+   ======================= */
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.add-to-cart-btn {
+    background: #007aff;
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.add-to-cart-btn:hover {
+    background: #005ecb;
+    transform: translateY(-2px);
+}
+
+/* =======================
+   Корзина
+   ======================= */
 .cart-content {
     padding: 20px;
 }
 
 .cart-item {
-    background: white;
-    border-radius: 12px;
+    background: #fff;
+    border-radius: 14px;
     padding: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .cart-item-image {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
     object-fit: cover;
 }
 
@@ -305,111 +372,89 @@ body {
 }
 
 .cart-item-name {
-    font-weight: bold;
-    margin-bottom: 4px;
+    font-weight: 600;
 }
 
 .cart-item-details {
-    color: #666;
-    font-size: 14px;
+    font-size: 13px;
+    color: #777;
+    margin-top: 2px;
 }
 
 .cart-item-price {
-    font-weight: bold;
-    color: #0088cc;
+    color: #007aff;
+    font-weight: 600;
+    margin-top: 4px;
 }
 
 .cart-item-remove {
     background: none;
     border: none;
-    color: #ff4444;
+    color: #ff3b30;
+    font-size: 18px;
     cursor: pointer;
-    padding: 8px;
 }
 
+.cart-item-remove:hover {
+    opacity: 0.7;
+}
+
+/* =======================
+   Итог корзины
+   ======================= */
 .cart-total {
-    background: white;
-    border-radius: 12px;
+    background: #fff;
+    border-radius: 16px;
     padding: 20px;
-    margin-top: 20px;
     text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .cart-total h3 {
-    margin-bottom: 16px;
     font-size: 20px;
+    margin-bottom: 10px;
 }
 
 .checkout-btn {
-    background: #0088cc;
+    background: #111;
     color: white;
     border: none;
-    padding: 16px;
-    border-radius: 8px;
+    padding: 14px 20px;
+    border-radius: 10px;
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    width: 100%;
+    transition: background 0.3s ease;
+}
+
+.checkout-btn:hover {
+    background: #333;
 }
 
 .empty-cart {
     text-align: center;
-    padding: 40px 20px;
-    color: #666;
+    color: #777;
+    padding: 50px 0;
 }
 
-/* Счетчик корзины */
+/* =======================
+   Счётчик корзины
+   ======================= */
 #cart-count {
-    background: #0088cc;
+    background: #007aff;
     color: white;
     border-radius: 50%;
-    padding: 2px 6px;
+    padding: 3px 7px;
     font-size: 12px;
     margin-left: 4px;
 }
 
-/* Адаптивность */
-@media (max-width: 480px) {
-    .full-width-banner {
-        height: 35vh;
-        min-height: 200px;
-    }
-    
-    .vitrin h1 {
-        font-size: 28px;
-    }
-    
-    .vitrin p {
-        font-size: 12px;
-    }
-    
-    #product-list {
-        grid-template-columns: 1fr;
-        gap: 12px;
-        padding: 15px;
-    }
-    
-    .header-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .b1 {
-        width: 100%;
-        max-width: 200px;
-    }
-}
-
-@media (min-width: 768px) {
-    .full-width-banner {
-        height: 45vh;
-        max-height: 400px;
-    }
-}
-/* Галерея товара */
+/* =======================
+   Галерея товара
+   ======================= */
 .product-thumbnails {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     justify-content: center;
     margin-top: 16px;
     flex-wrap: wrap;
@@ -420,16 +465,28 @@ body {
     height: 60px;
     border-radius: 8px;
     cursor: pointer;
-    opacity: 0.6;
-    transition: opacity 0.2s;
+    opacity: 0.5;
+    transition: all 0.25s ease;
     object-fit: cover;
 }
 
-.thumbnail.active {
+.thumbnail.active,
+.thumbnail:hover {
     opacity: 1;
-    border: 2px solid #0088cc;
+    border: 2px solid #007aff;
 }
 
-.thumbnail:hover {
-    opacity: 0.8;
+/* =======================
+   Адаптивность
+   ======================= */
+@media (max-width: 480px) {
+    #product-list {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 20px;
+    }
+
+    .vitrin h1 {
+        font-size: 26px;
+    }
 }

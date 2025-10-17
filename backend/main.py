@@ -5,8 +5,19 @@ from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 import os
 import json
-from image_processor import image_processor
 import requests
+import datetime
+
+# Пытаемся импортировать image_processor, но если его нет - создаем заглушку
+try:
+    from image_processor import image_processor
+except ImportError:
+    print("[WARN] image_processor not found, using stub")
+    class ImageProcessorStub:
+        def process_multiple_images(self, images, name, product_id):
+            # Заглушка для обработки изображений
+            return [{'small': '/static/images/placeholder.webp', 'large': '/static/images/placeholder.webp'}]
+    image_processor = ImageProcessorStub()
 
 load_dotenv()
 
@@ -20,14 +31,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Рекомендуется использовать абсолютный путь к frontend'у
-FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend"))
-if not os.path.isdir(FRONTEND_DIR):
-    print(f"[WARN] Frontend directory not found at {FRONTEND_DIR}")
+# ИСПРАВЛЕННЫЙ ПУТЬ К FRONTEND - поднимаемся на уровень выше
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)  # Поднимаемся на уровень выше backend
+FRONTEND_DIR = os.path.join(PROJECT_ROOT, "frontend")
 
-app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+print(f"[INFO] Base directory: {BASE_DIR}")
+print(f"[INFO] Project root: {PROJECT_ROOT}")
+print(f"[INFO] Frontend directory: {FRONTEND_DIR}")
+print(f"[INFO] Frontend exists: {os.path.exists(FRONTEND_DIR)}")
 
-ADMIN_SECRET = os.getenv("ADMIN_SECRET", "calistor_admin_2024")
+if os.path.exists(FRONTEND_DIR):
+    print(f"[INFO] Frontend contents: {os.listdir(FRONTEND_DIR)}")
+    # Монтируем статические файлы только если директория существует
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+else:
+    print(f"[ERROR] Frontend directory not found at {FRONTEND_DIR}")
+    print(f"[INFO] Current working directory: {os.getcwd()}")
+    print(f"[INFO] Directory contents:")
+    for item in os.listdir(PROJECT_ROOT):
+        print(f"  - {item}")
+
+ADMIN_SECRET = os.getenv("ADMIN_SECRET", "calistorAdminToken")
 PRODUCTS_FILE = "products.json"
 
 # ======== Функции загрузки и сохранения ========
@@ -36,16 +61,23 @@ def load_products():
         if os.path.exists(PRODUCTS_FILE):
             with open(PRODUCTS_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
+                print(f"[INFO] Loaded {len(data)} products from {PRODUCTS_FILE}")
                 return data
+        print(f"[INFO] Products file not found, using default")
         return []
     except Exception as e:
-        print(f"[WARN] load_products error: {e}")
+        print(f"[ERROR] load_products error: {e}")
         return []
 
 def save_products(products):
-    with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(products, f, ensure_ascii=False, indent=2)
+    try:
+        with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(products, f, ensure_ascii=False, indent=2)
+        print(f"[INFO] Saved {len(products)} products to {PRODUCTS_FILE}")
+    except Exception as e:
+        print(f"[ERROR] save_products error: {e}")
 
+# Загружаем продукты
 products = load_products()
 
 if not products:
@@ -58,10 +90,10 @@ if not products:
             "available_sizes": {"one size": 10},
             "composition": "95% хлопок, 5% лайкра",
             "description": "Премиальная футболка идеального кроя. Удобная и стильная для повседневной носки.",
-            "image": "/static/images/products/product-1-small.webp",
-            "image_large": "/static/images/products/product-1-large.webp",
-            "images": ["/static/images/products/product-1-small.webp"],
-            "images_large": ["/static/images/products/product-1-large.webp"]
+            "image": "/static/images/placeholder.webp",
+            "image_large": "/static/images/placeholder.webp",
+            "images": ["/static/images/placeholder.webp"],
+            "images_large": ["/static/images/placeholder.webp"]
         },
         {
             "id": 2,
@@ -71,17 +103,20 @@ if not products:
             "available_sizes": {"S": 5, "M": 8, "L": 3},
             "composition": "94% хлопок, 6% спандекс",
             "description": "Теплая и уютная толстовка для прохладных дней.",
-            "image": "/static/images/products/product-2-small.webp",
-            "image_large": "/static/images/products/product-2-large.webp",
-            "images": ["/static/images/products/product-2-small.webp"],
-            "images_large": ["/static/images/products/product-2-large.webp"]
+            "image": "/static/images/placeholder.webp",
+            "image_large": "/static/images/placeholder.webp",
+            "images": ["/static/images/placeholder.webp"],
+            "images_large": ["/static/images/placeholder.webp"]
         }
     ]
     save_products(products)
 
 # ======== Вспомогательные ========
+
 def verify_admin_token(token: str):
-    return token == ADMIN_SECRET
+    is_valid = token == ADMIN_SECRET
+    print(f"[DEBUG] Token verification: {is_valid}")
+    return is_valid
 
 # ======== Основные маршруты ========
 
@@ -90,13 +125,23 @@ def serve_frontend():
     index_path = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
-    raise HTTPException(status_code=404, detail="Frontend index not found")
+    
+    # Fallback - возвращаем простую страницу
+    return {"message": "Frontend not found. Please check frontend directory."}
+
+@app.get("/admin")
+def serve_admin():
+    admin_path = os.path.join(FRONTEND_DIR, "admin.html")
+    if os.path.exists(admin_path):
+        return FileResponse(admin_path)
+    
+    # Fallback
+    return {"message": "Admin page not found. Please check frontend directory."}
 
 @app.get("/api/products")
 def get_products():
     """Возвращает товары для сайта и мини-аппа"""
     print(f"[DEBUG] === ЗАПРОС /api/products ===")
-    print(f"[DEBUG] Глобальная переменная products: {len(products)} товаров")
     
     # Всегда загружаем свежие данные из файла
     current_products = load_products()
@@ -104,20 +149,17 @@ def get_products():
     
     products_for_client = []
     for product in current_products:
-        print(f"[DEBUG] Обрабатываем товар: {product['name']}")
-        print(f"[DEBUG] available_sizes: {product.get('available_sizes', {})}")
-        
         p = product.copy()
         if "available_sizes" in p:
             p["sizes"] = list(p["available_sizes"].keys())
-            print(f"[DEBUG] Созданы sizes: {p['sizes']}")
         else:
             p["sizes"] = []
-            print(f"[DEBUG] Нет available_sizes")
         products_for_client.append(p)
     
     print(f"[DEBUG] Отправляем клиенту: {len(products_for_client)} товаров")
     return products_for_client
+
+# ======== Статические файлы ========
 
 @app.get("/style.css")
 def serve_css():
@@ -133,75 +175,76 @@ def serve_js():
         return FileResponse(js_path)
     raise HTTPException(status_code=404)
 
-@app.get("/images/banner.webp")
-def serve_banner():
-    banner_path = os.path.join(FRONTEND_DIR, "images", "banner.webp")
-    if os.path.exists(banner_path):
-        return FileResponse(banner_path)
-    raise HTTPException(status_code=404)
-
-# ======== Картинки ========
-
-@app.get("/static/images/products/{filename}")
-def serve_product_image(filename: str):
-    file_path = os.path.join(FRONTEND_DIR, "images", "products", filename)
+# УНИФИЦИРОВАННЫЙ МАРШРУТ ДЛЯ ВСЕХ ИЗОБРАЖЕНИЙ
+@app.get("/images/{path:path}")
+def serve_images(path: str):
+    if not os.path.exists(FRONTEND_DIR):
+        raise HTTPException(status_code=404, detail="Frontend directory not found")
+    
+    file_path = os.path.join(FRONTEND_DIR, "images", path)
     if os.path.exists(file_path):
         return FileResponse(file_path)
-    placeholder = os.path.join(FRONTEND_DIR, "images", "placeholder.webp")
-    if os.path.exists(placeholder):
-        return FileResponse(placeholder)
-    raise HTTPException(status_code=404, detail="Image not found")
+    
+    raise HTTPException(status_code=404, detail=f"Image not found: {path}")
 
-@app.get("/static/images/{filename}")
-def serve_image(filename: str):
-    file_path = os.path.join(FRONTEND_DIR, "images", filename)
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="Image not found")
+# ======== Админка API ========
 
-# ======== Админка ========
-
-@app.get("/admin")
-def serve_admin():
-    admin_path = os.path.join(FRONTEND_DIR, "admin.html")
-    if os.path.exists(admin_path):
-        return FileResponse(admin_path)
-    raise HTTPException(status_code=404, detail="Admin page not found")
+@app.post("/api/admin/verify-token")
+async def verify_token(data: dict):
+    """Проверка валидности токена"""
+    token = data.get('token')
+    print(f"[DEBUG] Verify token request: {token}")
+    
+    if verify_admin_token(token):
+        return {"status": "valid"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 @app.post("/api/admin/login")
 def admin_login(login_data: dict):
     token = login_data.get("token")
+    print(f"[DEBUG] Login attempt with token: {token}")
+    
     if verify_admin_token(token):
         return {"status": "success", "message": "Добро пожаловать в админку!"}
     raise HTTPException(status_code=401, detail="Неверный токен доступа")
 
 @app.get("/api/admin/products")
 def get_admin_products(token: str):
+    print(f"[DEBUG] Get admin products with token: {token}")
+    
     if not verify_admin_token(token):
         raise HTTPException(status_code=401, detail="Доступ запрещен")
+    
+    current_products = load_products()
     enriched = []
-    for p in products:
+    for p in current_products:
         x = p.copy()
         x["sizes"] = list(p.get("available_sizes", {}).keys())
         enriched.append(x)
+    
+    print(f"[DEBUG] Returning {len(enriched)} products to admin")
     return enriched
 
 @app.get("/api/admin/statistics")
 def get_statistics(token: str):
+    print(f"[DEBUG] Get statistics with token: {token}")
+    
     if not verify_admin_token(token):
         raise HTTPException(status_code=401, detail="Доступ запрещен")
 
-    total_products = len(products)
+    current_products = load_products()
+    total_products = len(current_products)
     total_items = 0
     size_breakdown = {}
 
-    for product in products:
+    for product in current_products:
         for size, qty in product.get("available_sizes", {}).items():
             total_items += qty
             size_breakdown[size] = size_breakdown.get(size, 0) + qty
 
     products_stats = []
-    for product in products:
+    for product in current_products:
         total = sum(product.get("available_sizes", {}).values())
         products_stats.append({
             "id": product["id"],
@@ -228,13 +271,17 @@ async def create_product(
     available_sizes: str = Form(...),
     images: list[UploadFile] = File(...)
 ):
+    print(f"[DEBUG] Create product: {name}")
+    
     if not verify_admin_token(token):
         raise HTTPException(status_code=401, detail="Доступ запрещен")
 
     try:
-        new_id = max([p["id"] for p in products], default=0) + 1
+        current_products = load_products()
+        new_id = max([p["id"] for p in current_products], default=0) + 1
         sizes_data = json.loads(available_sizes)
 
+        print(f"[DEBUG] Processing {len(images)} images for product {new_id}")
         all_image_paths = image_processor.process_multiple_images(images, name, new_id)
         small = [img['small'] for img in all_image_paths]
         large = [img['large'] for img in all_image_paths]
@@ -253,42 +300,79 @@ async def create_product(
             "image_large": large[0] if large else "/static/images/placeholder.webp"
         }
 
-        products.append(new_product)
-        save_products(products)
+        current_products.append(new_product)
+        save_products(current_products)
+        
+        print(f"[DEBUG] Product created successfully: {new_id}")
         return {"status": "success", "product": new_product}
 
     except Exception as e:
+        print(f"[ERROR] Create product error: {e}")
         raise HTTPException(status_code=500, detail=f"Ошибка при создании товара: {e}")
 
-@app.put("/api/admin/products/{product_id}")
-async def update_product(product_id: int, product_data: dict):
-    token = product_data.get("token")
+@app.post("/api/admin/banner")
+async def upload_banner(
+    token: str = Form(...),
+    banner_image: UploadFile = File(...)
+):
+    """Загрузка баннера"""
+    print(f"[DEBUG] Upload banner request")
+    
+    # 1. Проверка токена
     if not verify_admin_token(token):
+        # 🚨 Ваша главная проблема, судя по скриншотам, вот здесь (401)
         raise HTTPException(status_code=401, detail="Доступ запрещен")
 
-    idx = next((i for i, p in enumerate(products) if p["id"] == product_id), None)
-    if idx is None:
-        raise HTTPException(status_code=404, detail="Товар не найден")
+    # 2. Проверка и создание директории
+    if not os.path.exists(FRONTEND_DIR):
+        raise HTTPException(status_code=500, detail="Frontend directory not found")
 
-    if "available_sizes" in product_data and isinstance(product_data["available_sizes"], str):
-        product_data["available_sizes"] = json.loads(product_data["available_sizes"])
-
-    for k, v in product_data.items():
-        if k not in ["token", "id"]:
-            products[idx][k] = v
-
-    save_products(products)
-    return {"status": "success", "product": products[idx]}
-
+    image_dir = os.path.join(FRONTEND_DIR, "images")
+    # 🟢 Создание папки, если она не существует (это у вас уже есть)
+    os.makedirs(image_dir, exist_ok=True) 
+    
+    output_path = os.path.join(image_dir, 'banner.webp')
+    
+    try:
+        # 3. Чтение файла и сохранение
+        content = await banner_image.read()
+        
+        with open(output_path, "wb") as buffer:
+            buffer.write(content)
+            
+        print(f"[DEBUG] Banner saved to: {output_path}")
+        return {"status": "success", "message": "Баннер успешно обновлен!", "path": output_path}
+        
+    except Exception as e:
+        print(f"[ERROR] Banner upload error: {e}")
+        # Возвращаем 500 ошибку, если что-то пошло не так при сохранении
+        raise HTTPException(status_code=500, detail=f"Ошибка сохранения баннера: {e}")
+    
 @app.delete("/api/admin/products/{product_id}")
 def delete_product(product_id: int, token: str):
+    print(f"[DEBUG] Delete product: {product_id}")
+    
     if not verify_admin_token(token):
         raise HTTPException(status_code=401, detail="Доступ запрещен")
 
-    global products
-    products = [p for p in products if p["id"] != product_id]
-    save_products(products)
-    return {"status": "success", "message": "Товар удален"}
+    try:
+        current_products = load_products()
+        updated_products = [p for p in current_products if p["id"] != product_id]
+        
+        if len(updated_products) == len(current_products):
+            raise HTTPException(status_code=404, detail="Товар не найден")
+            
+        save_products(updated_products)
+        print(f"[DEBUG] Product {product_id} deleted successfully")
+        return {"status": "success", "message": "Товар удален"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] Delete product error: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка при удалении товара: {e}")
+
+# ======== Отладочные маршруты ========
 
 @app.get("/api/debug/products")
 def debug_products():
@@ -303,12 +387,25 @@ def debug_products():
         "products": products_data
     }
 
+@app.get("/api/debug/paths")
+def debug_paths():
+    """Отладочный эндпоинт для проверки путей"""
+    return {
+        "base_dir": BASE_DIR,
+        "project_root": PROJECT_ROOT,
+        "frontend_dir": FRONTEND_DIR,
+        "frontend_exists": os.path.exists(FRONTEND_DIR),
+        "products_file": os.path.abspath(PRODUCTS_FILE),
+        "products_file_exists": os.path.exists(PRODUCTS_FILE),
+        "current_working_dir": os.getcwd()
+    }
+
 @app.get("/api/test")
 def test_endpoint():
     return {
         "status": "ok", 
         "message": "Сервер работает",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.datetime.now().isoformat()
     }
 
 # ======== Заказы ========
@@ -350,3 +447,7 @@ def format_order_message(order_data):
     msg += f"📛 Имя: {user_info.get('first_name', 'Неизвестно')}\n"
     msg += f"📞 Username: @{user_info.get('username', 'Не указан')}\n"
     return msg
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

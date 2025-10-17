@@ -35,7 +35,7 @@ function showPage(pageName) {
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
     });
-    
+
     const targetPage = document.getElementById(pageName + '-page');
     if (targetPage) {
         targetPage.classList.add('active');
@@ -54,29 +54,44 @@ function goBack() {
 }
 
 // ========== ЗАГРУЗКА ТОВАРОВ ==========
-document.addEventListener('DOMContentLoaded', function() {
-    loadCart();
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Определение функции
+    function loadMainBanner() {
+        const bannerImg = document.getElementById('main-banner');
+
+        if (bannerImg) {
+            // 🟢 Логика обхода кэша
+            const timestamp = new Date().getTime();
+            bannerImg.src = `/static/images/banner.webp?t=${timestamp}`;
+            console.log("Баннер загружен с обходом кэша.");
+        }
+    }
     
+    // 2. Вызов функции
+    loadCart();
+    loadMainBanner(); // ✅ Вызываем функцию здесь, один раз при загрузке DOM
+
+    // 3. Остальная логика (загрузка товаров)
     fetch("/api/products")
-      .then(res => {
-        if (!res.ok) throw new Error('Ошибка загрузки товаров');
-        return res.json();
-      })
-      .then(products => {
-          allProducts = products;
-          renderProducts(products);
-      })
-      .catch(error => {
-          console.error('Error:', error);
-          const productList = document.getElementById("product-list");
-          if (productList) {
-              productList.innerHTML = '<p>Ошибка загрузки товаров</p>';
-          }
-      });
-});
+        .then(res => {
+            if (!res.ok) throw new Error('Ошибка загрузки товаров');
+            return res.json();
+        })
+        .then(products => {
+            allProducts = products;
+            renderProducts(products);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const productList = document.getElementById("product-list");
+            if (productList) {
+                productList.innerHTML = '<p>Ошибка загрузки товаров</p>';
+            }
+        });
+}); // ✅ Здесь закрываем основной блок DOMContentLoaded
 
 // ========== ОБРАБОТЧИК РАЗМЕРОВ ==========
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
     if (e.target.classList.contains('size-btn')) {
         document.querySelectorAll('.size-btn').forEach(btn => {
             btn.classList.remove('selected');
@@ -90,24 +105,26 @@ document.addEventListener('click', function(e) {
 function renderProducts(products) {
     const container = document.getElementById("product-list");
     if (!container) return;
-    
+
     container.innerHTML = products.map(product => {
-        const mainImage = product.images && product.images.length > 0 
-            ? product.images[0] 
+        const mainImage = product.images && product.images.length > 0
+            ? product.images[0]
             : product.image;
-        
+
         return `
-        <div class="product" onclick="openProduct(${product.id})">
-            <img src="${mainImage}" alt="${product.name}" onerror="this.src='/static/images/placeholder.webp'" />
-            <h3>${product.name}</h3>
-            <p>${product.price}₽</p>
-            <button class="add-to-cart-small" onclick="event.stopPropagation(); addToCartFromCard(${product.id})">
-                В корзину
-            </button>
-        </div>
-        `;
+        <div class="product" onclick="openProduct(${product.id})">
+            <img src="${mainImage}" alt="${product.name}" onerror="this.src='/static/images/placeholder.webp'" />
+            <h3>${product.name}</h3>
+            <p>${product.price}₽</p>
+            <button class="add-to-cart-small" onclick="event.stopPropagation(); addToCartFromCard(${product.id})">
+                В корзину
+            </button>
+        </div>
+        `;
     }).join("");
 }
+
+
 
 // ========== СТРАНИЦА ТОВАРА ==========
 function openProduct(productId) {
@@ -120,17 +137,17 @@ function openProduct(productId) {
 function showProductDetail(product) {
     currentProduct = product;
     selectedSize = null;
-    
+
     // Заполняем данные
     document.getElementById('product-title').textContent = product.name;
     document.getElementById('product-price').textContent = `${product.price}₽`;
     document.getElementById('product-color').textContent = product.color;
     document.getElementById('product-composition').textContent = product.composition;
-    
+
     // Устанавливаем главное изображение
     const mainImages = product.images_large || [product.image_large];
     document.getElementById('product-main-image').src = mainImages[0] || product.image;
-    
+
     // Создаем галерею миниатюр если есть несколько изображений
     const thumbnailsContainer = document.getElementById('product-thumbnails');
     if (mainImages.length > 1) {
@@ -141,14 +158,14 @@ function showProductDetail(product) {
     } else {
         thumbnailsContainer.innerHTML = '';
     }
-    
+
     document.getElementById('product-description-text').textContent = product.description;
-    
+
     // Динамически создаем кнопки размеров
     const sizeButtonsContainer = document.getElementById('size-buttons');
     if (sizeButtonsContainer) {
         const availableSizes = product.sizes || [];
-        
+
         if (availableSizes.length > 0) {
             sizeButtonsContainer.innerHTML = availableSizes.map(size => `
                 <button class="size-btn" data-size="${size}">${size}</button>
@@ -157,12 +174,12 @@ function showProductDetail(product) {
             sizeButtonsContainer.innerHTML = '<p>Нет доступных размеров</p>';
         }
     }
-    
+
     // Сбрасываем выбор размера
     document.querySelectorAll('.size-btn').forEach(btn => {
         btn.classList.remove('selected');
     });
-    
+
     // Показываем страницу товара
     showPage('product');
 }
@@ -182,10 +199,10 @@ function addToCartFromCard(productId) {
     if (!product) return;
 
     const availableSizes = product.sizes || [];
-    
+
     if (availableSizes.length === 1) {
         const autoSize = availableSizes[0];
-        
+
         const cartItem = {
             id: Date.now(),
             productId: product.id,
@@ -223,7 +240,7 @@ function addToCartFromCard(productId) {
 
 function addToCartFromDetail() {
     if (!currentProduct) return;
-    
+
     if (!selectedSize) {
         tg.showPopup({
             title: "Выберите размер",
@@ -263,21 +280,21 @@ function renderCart() {
     const cartContainer = document.getElementById('cart-items');
     const emptyCart = document.getElementById('empty-cart');
     const totalPriceElement = document.getElementById('total-price');
-    
+
     if (!cartContainer || !emptyCart || !totalPriceElement) return;
-    
+
     if (cart.length === 0) {
         cartContainer.innerHTML = '';
         emptyCart.style.display = 'block';
         totalPriceElement.textContent = '0';
         return;
     }
-    
+
     emptyCart.style.display = 'none';
-    
+
     const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
     totalPriceElement.textContent = totalPrice;
-    
+
     cartContainer.innerHTML = cart.map(item => `
         <div class="cart-item">
             <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='/static/images/placeholder.webp'">
@@ -323,7 +340,7 @@ function checkout() {
     tg.showConfirm("Отправить заказ менеджеру?", (confirmed) => {
         if (confirmed) {
             tg.MainButton.showProgress();
-            
+
             fetch("/api/order", {
                 method: "POST",
                 headers: {
@@ -331,31 +348,31 @@ function checkout() {
                 },
                 body: JSON.stringify(orderData)
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.detail) });
-                }
-                return response.json();
-            })
-            .then(data => {
-                tg.MainButton.hideProgress();
-                
-                if (data.status === "success") {
-                    cart = [];
-                    saveCart();
-                    renderCart();
-                    showPage('home');
-                    
-                    tg.showAlert("✅ Заказ отправлен! Менеджер свяжется с вами в ближайшее время.");
-                } else {
-                    throw new Error(data.detail);
-                }
-            })
-            .catch(error => {
-                tg.MainButton.hideProgress();
-                console.error("Order error:", error);
-                tg.showAlert("❌ Ошибка отправки заказа: " + error.message);
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.detail) });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    tg.MainButton.hideProgress();
+
+                    if (data.status === "success") {
+                        cart = [];
+                        saveCart();
+                        renderCart();
+                        showPage('home');
+
+                        tg.showAlert("✅ Заказ отправлен! Менеджер свяжется с вами в ближайшее время.");
+                    } else {
+                        throw new Error(data.detail);
+                    }
+                })
+                .catch(error => {
+                    tg.MainButton.hideProgress();
+                    console.error("Order error:", error);
+                    tg.showAlert("❌ Ошибка отправки заказа: " + error.message);
+                });
         }
     });
 }

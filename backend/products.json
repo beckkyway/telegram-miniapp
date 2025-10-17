@@ -172,5 +172,101 @@
     ],
     "image": "/static/images/products/product-22-1-small.webp",
     "image_large": "/static/images/products/product-22-1-large.webp"
+  },
+  {
+    "id": 23,
+    "name": "ганжи",
+    "price": 2000,
+    "color": "бел",
+    "available_sizes": {
+      "S": 1,
+      "M": 1,
+      "L": 1
+    },
+    "composition": "100 1000",
+    "description": "товар",
+    "images": [
+      "/static/images/products/product-23-1-small.webp"
+    ],
+    "images_large": [
+      "/static/images/products/product-23-1-large.webp"
+    ],
+    "image": "/static/images/products/product-23-1-small.webp",
+    "image_large": "/static/images/products/product-23-1-large.webp"
+  },
+  {
+    "id": 24,
+    "name": "товар",
+    "price": 222,
+    "color": "бел",
+    "available_sizes": {
+      "S": 1,
+      "M": 1,
+      "L": 1
+    },
+    "composition": "100",
+    "description": "товар",
+    "images": [
+      "/static/images/products/product-24-1-small.webp"
+    ],
+    "images_large": [
+      "/static/images/products/product-24-1-large.webp"
+    ],
+    "image": "/static/images/products/product-24-1-small.webp",
+    "image_large": "/static/images/products/product-24-1-large.webp"
+  },
+  {
+    "id": 25,
+    "name": "товарчик",
+    "price": 222,
+    "color": "бел",
+    "available_sizes": {
+      "M": 1
+    },
+    "composition": "хлоп",
+    "description": "товар",
+    "images": [
+      "/static/images/products/product-25-1-small.webp",
+      "/static/images/products/product-25-2-small.webp",
+      "/static/images/products/product-25-3-small.webp",
+      "/static/images/products/product-25-4-small.webp",
+      "/static/images/products/product-25-5-small.webp",
+      "/static/images/products/product-25-6-small.webp"
+    ],
+    "images_large": [
+      "/static/images/products/product-25-1-large.webp",
+      "/static/images/products/product-25-2-large.webp",
+      "/static/images/products/product-25-3-large.webp",
+      "/static/images/products/product-25-4-large.webp",
+      "/static/images/products/product-25-5-large.webp",
+      "/static/images/products/product-25-6-large.webp"
+    ],
+    "image": "/static/images/products/product-25-1-small.webp",
+    "image_large": "/static/images/products/product-25-1-large.webp"
+  },
+  {
+    "id": 26,
+    "name": "футболка",
+    "price": 500,
+    "color": "черный",
+    "available_sizes": {
+      "S": 1,
+      "M": 1,
+      "L": 1
+    },
+    "composition": "100 проц",
+    "description": "товарчик баварчик",
+    "images": [
+      "/static/images/products/product-26-1-small.webp",
+      "/static/images/products/product-26-2-small.webp",
+      "/static/images/products/product-26-3-small.webp"
+    ],
+    "images_large": [
+      "/static/images/products/product-26-1-large.webp",
+      "/static/images/products/product-26-2-large.webp",
+      "/static/images/products/product-26-3-large.webp"
+    ],
+    "image": "/static/images/products/product-26-1-small.webp",
+    "image_large": "/static/images/products/product-26-1-large.webp"
   }
 ]
