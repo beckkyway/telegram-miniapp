@@ -1,0 +1,18 @@
+# Виртуальное окружение
+venv/
+backend/venv/
+
+# Кэш и временные файлы
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE и редакторы
+.vscode/
+.idea/
+.DS_Store
+
+# Ngrok и конфиги
+*.log
+.env

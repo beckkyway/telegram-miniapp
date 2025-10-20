@@ -702,5 +702,23 @@ button {
 .share-btn:hover {
   background: #dcdcdc;
 }
+/* === Плавные переходы между страницами === */
+.page {
+  opacity: 0;
+  transform: translateY(15px);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
 
+.page.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Чтобы не было резкого мигания при старте */
+.page:first-of-type {
+  opacity: 1;
+  transform: translateY(0);
+}
 

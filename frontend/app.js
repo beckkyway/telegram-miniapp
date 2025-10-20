@@ -94,12 +94,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ========== НАВИГАЦИЯ ==========
 function showPage(pageName) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const target = document.getElementById(pageName + '-page');
-    if (target) {
-        target.classList.add('active');
-        pageHistory.push(pageName);
-    }
+  const pages = document.querySelectorAll('.page');
+  pages.forEach(page => {
+    page.classList.remove('active');
+  });
+
+  const targetPage = document.getElementById(`${pageName}-page`);
+  if (targetPage) {
+    // Добавляем небольшую задержку, чтобы анимация успела отработать
+    setTimeout(() => {
+      targetPage.classList.add('active');
+      window.scrollTo(0, 0); // сбрасываем прокрутку
+    }, 50);
+  }
 }
 
 function goBack() {
