@@ -268,5 +268,36 @@
     ],
     "image": "/static/images/products/product-26-1-small.webp",
     "image_large": "/static/images/products/product-26-1-large.webp"
+  },
+  {
+    "id": 27,
+    "name": "Лонгслив cropped-fit",
+    "price": 3000,
+    "color": "black",
+    "available_sizes": {
+      "S": 1,
+      "M": 1,
+      "L": 1
+    },
+    "composition": "100% премиальный хлопок плотностью 300 грамм",
+    "description": "Твой ежедневный выход в люди с крутой нашивкой! разработал специльано для тебя ",
+    "images": [
+      "/static/images/products/product-27-1-small.webp",
+      "/static/images/products/product-27-2-small.webp",
+      "/static/images/products/product-27-3-small.webp",
+      "/static/images/products/product-27-4-small.webp",
+      "/static/images/products/product-27-5-small.webp",
+      "/static/images/products/product-27-6-small.webp"
+    ],
+    "images_large": [
+      "/static/images/products/product-27-1-large.webp",
+      "/static/images/products/product-27-2-large.webp",
+      "/static/images/products/product-27-3-large.webp",
+      "/static/images/products/product-27-4-large.webp",
+      "/static/images/products/product-27-5-large.webp",
+      "/static/images/products/product-27-6-large.webp"
+    ],
+    "image": "/static/images/products/product-27-1-small.webp",
+    "image_large": "/static/images/products/product-27-1-large.webp"
   }
 ]

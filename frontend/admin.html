@@ -437,75 +437,75 @@
     </div>
 
     <script>
-    let adminToken = '';
-    const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'one size'];
+        let adminToken = '';
+        const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'one size'];
 
-    // Переменные для логики Cropper.js
-    let croppedImages = [];
-    let cropper = null;
-    let currentFileIndex = 0;
-    let imageFiles = [];
-    let bannerCropper = null;
-    let bannerImageFile = null;
+        // Переменные для логики Cropper.js
+        let croppedImages = [];
+        let cropper = null;
+        let currentFileIndex = 0;
+        let imageFiles = [];
+        let bannerCropper = null;
+        let bannerImageFile = null;
 
-    // ==================== TABS & UI ====================
+        // ==================== TABS & UI ====================
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК
-    function showTab(tabName) {
-        console.log('Переключение на вкладку:', tabName);
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК
+        function showTab(tabName) {
+            console.log('Переключение на вкладку:', tabName);
 
-        // Скрываем все вкладки
-        document.getElementById('products-tab').classList.add('hidden');
-        document.getElementById('statistics-tab').classList.add('hidden');
-        document.getElementById('settings-tab').classList.add('hidden');
+            // Скрываем все вкладки
+            document.getElementById('products-tab').classList.add('hidden');
+            document.getElementById('statistics-tab').classList.add('hidden');
+            document.getElementById('settings-tab').classList.add('hidden');
 
-        // Убираем активный класс со всех кнопок
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
+            // Убираем активный класс со всех кнопок
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
 
-        // Показываем нужную вкладку и активируем кнопку
-        const targetTab = document.getElementById(tabName + '-tab');
-        if (targetTab) {
-            targetTab.classList.remove('hidden');
-        }
-
-        // Активируем соответствующую кнопку
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            if (btn.textContent.includes(getTabButtonText(tabName))) {
-                btn.classList.add('active');
+            // Показываем нужную вкладку и активируем кнопку
+            const targetTab = document.getElementById(tabName + '-tab');
+            if (targetTab) {
+                targetTab.classList.remove('hidden');
             }
-        });
 
-        // Загружаем данные если нужно
-        if (tabName === 'statistics') {
-            loadStatistics();
-        } else if (tabName === 'settings') {
-            // Обновляем превью баннера, добавляя метку времени для обхода кеша
-            const preview = document.getElementById('current-banner-preview');
-            preview.src = `/static/images/banner.webp?t=${new Date().getTime()}`;
+            // Активируем соответствующую кнопку
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.textContent.includes(getTabButtonText(tabName))) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Загружаем данные если нужно
+            if (tabName === 'statistics') {
+                loadStatistics();
+            } else if (tabName === 'settings') {
+                // Обновляем превью баннера, добавляя метку времени для обхода кеша
+                const preview = document.getElementById('current-banner-preview');
+                preview.src = `/static/images/banner.webp?t=${new Date().getTime()}`;
+            }
         }
-    }
 
-    function getTabButtonText(tabName) {
-        const texts = {
-            'products': 'Управление товарами', // Используем часть текста, так как в HTML есть эмодзи
-            'statistics': 'Статистика',
-            'settings': 'Настройки'
-        };
-        return texts[tabName] || '';
-    }
+        function getTabButtonText(tabName) {
+            const texts = {
+                'products': 'Управление товарами', // Используем часть текста, так как в HTML есть эмодзи
+                'statistics': 'Статистика',
+                'settings': 'Настройки'
+            };
+            return texts[tabName] || '';
+        }
 
-    // ==================== SIZES LOGIC ====================
+        // ==================== SIZES LOGIC ====================
 
-    function initSizeManager() {
-        const container = document.getElementById('sizes-container');
-        container.innerHTML = '';
+        function initSizeManager() {
+            const container = document.getElementById('sizes-container');
+            container.innerHTML = '';
 
-        allSizes.forEach(size => {
-            const sizeDiv = document.createElement('div');
-            sizeDiv.className = 'size-item';
-            sizeDiv.innerHTML = `
+            allSizes.forEach(size => {
+                const sizeDiv = document.createElement('div');
+                sizeDiv.className = 'size-item';
+                sizeDiv.innerHTML = `
                 <label class="size-checkbox">
                     <input type="checkbox" value="${size}" onchange="toggleSizeQuantity('${size}')">
                     ${size}
@@ -518,402 +518,401 @@
                         value="0"
                         onchange="validateQuantity('${size}')">
             `;
-            container.appendChild(sizeDiv);
-        });
-    }
-
-    function toggleSizeQuantity(size) {
-        const checkbox = document.querySelector(`input[value="${size}"]`);
-        const quantityInput = document.getElementById(`quantity-${size}`);
-
-        if (checkbox.checked) {
-            quantityInput.classList.remove('hidden');
-            quantityInput.value = '1';
-        } else {
-            quantityInput.classList.add('hidden');
-            quantityInput.value = '0';
+                container.appendChild(sizeDiv);
+            });
         }
-    }
 
-    function validateQuantity(size) {
-        const input = document.getElementById(`quantity-${size}`);
-        if (input.value < 0 || isNaN(parseInt(input.value))) {
-            input.value = 0;
-        }
-    }
-
-    function getSizesData() {
-        const sizesData = {};
-        allSizes.forEach(size => {
+        function toggleSizeQuantity(size) {
             const checkbox = document.querySelector(`input[value="${size}"]`);
             const quantityInput = document.getElementById(`quantity-${size}`);
 
-            if (checkbox.checked && parseInt(quantityInput.value) > 0) {
-                sizesData[size] = parseInt(quantityInput.value);
+            if (checkbox.checked) {
+                quantityInput.classList.remove('hidden');
+                quantityInput.value = '1';
+            } else {
+                quantityInput.classList.add('hidden');
+                quantityInput.value = '0';
             }
-        });
-        return sizesData;
-    }
-
-    // ==================== AUTH ====================
-
-    async function login() {
-        const token = document.getElementById('admin-token').value;
-        const messageDiv = document.getElementById('login-message');
-
-        if (token && token.length > 0) {
-            try {
-                // Пробуем проверить токен через API
-                const response = await fetch('/api/admin/verify-token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ token: token })
-                });
-
-                if (response.ok) {
-                    localStorage.setItem('calistorAdminToken', token);
-                    adminToken = token;
-
-                    document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('admin-section').classList.remove('hidden');
-                    messageDiv.innerHTML = '<div class="success">Успешный вход!</div>';
-
-                    initSizeManager();
-                    loadProducts();
-                } else {
-                    messageDiv.innerHTML = '<div class="error">Неверный токен</div>';
-                }
-            } catch (error) {
-                // Если API недоступно, используем локальную проверку
-                if (token === 'calistorAdminToken') { // ❌ ВАЖНО: ЭТО ЛОКАЛЬНАЯ ЗАГЛУШКА ДЛЯ ТЕСТИРОВАНИЯ
-                    localStorage.setItem('calistorAdminToken', token);
-                    adminToken = token;
-
-                    document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('admin-section').classList.remove('hidden');
-                    messageDiv.innerHTML = '<div class="success">Успешный вход!</div>';
-
-                    initSizeManager();
-                    loadProducts();
-                } else {
-                    messageDiv.innerHTML = '<div class="error">Неверный токен</div>';
-                }
-            }
-        } else {
-            messageDiv.innerHTML = '<div class="error">Введите токен</div>';
         }
-    }
 
-    // ==================== IMAGE CROPPER ====================
+        function validateQuantity(size) {
+            const input = document.getElementById(`quantity-${size}`);
+            if (input.value < 0 || isNaN(parseInt(input.value))) {
+                input.value = 0;
+            }
+        }
 
-    function initImageCropper() {
-        document.getElementById('product-images').addEventListener('change', function (event) {
-            const files = Array.from(event.target.files);
-            if (files.length === 0) return;
+        function getSizesData() {
+            const sizesData = {};
+            allSizes.forEach(size => {
+                const checkbox = document.querySelector(`input[value="${size}"]`);
+                const quantityInput = document.getElementById(`quantity-${size}`);
 
-            if (files.length > 7) {
-                alert('Можно загрузить не более 7 изображений');
-                event.target.value = '';
+                if (checkbox.checked && parseInt(quantityInput.value) > 0) {
+                    sizesData[size] = parseInt(quantityInput.value);
+                }
+            });
+            return sizesData;
+        }
+
+        // ==================== AUTH ====================
+
+        async function login() {
+            const token = document.getElementById('admin-token').value;
+            const messageDiv = document.getElementById('login-message');
+
+            if (token && token.length > 0) {
+                try {
+                    // Пробуем проверить токен через API
+                    const response = await fetch('/api/admin/verify-token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ token: token })
+                    });
+
+                    if (response.ok) {
+                        localStorage.setItem('calistorAdminToken', token);
+                        adminToken = token;
+
+                        document.getElementById('login-section').classList.add('hidden');
+                        document.getElementById('admin-section').classList.remove('hidden');
+                        messageDiv.innerHTML = '<div class="success">Успешный вход!</div>';
+
+                        initSizeManager();
+                        loadProducts();
+                    } else {
+                        messageDiv.innerHTML = '<div class="error">Неверный токен</div>';
+                    }
+                } catch (error) {
+                    // Если API недоступно, используем локальную проверку
+                    if (token === 'calistorAdminToken') { // ❌ ВАЖНО: ЭТО ЛОКАЛЬНАЯ ЗАГЛУШКА ДЛЯ ТЕСТИРОВАНИЯ
+                        localStorage.setItem('calistorAdminToken', token);
+                        adminToken = token;
+
+                        document.getElementById('login-section').classList.add('hidden');
+                        document.getElementById('admin-section').classList.remove('hidden');
+                        messageDiv.innerHTML = '<div class="success">Успешный вход!</div>';
+
+                        initSizeManager();
+                        loadProducts();
+                    } else {
+                        messageDiv.innerHTML = '<div class="error">Неверный токен</div>';
+                    }
+                }
+            } else {
+                messageDiv.innerHTML = '<div class="error">Введите токен</div>';
+            }
+        }
+
+        // ==================== IMAGE CROPPER ====================
+
+        function initImageCropper() {
+            document.getElementById('product-images').addEventListener('change', function (event) {
+                const files = Array.from(event.target.files);
+                if (files.length === 0) return;
+
+                if (files.length > 7) {
+                    alert('Можно загрузить не более 7 изображений');
+                    event.target.value = '';
+                    return;
+                }
+
+                imageFiles = files;
+                currentFileIndex = 0;
+                croppedImages = [];
+                processNextImage();
+            });
+
+            document.getElementById('crop-save').addEventListener('click', function () {
+                if (!cropper) return;
+
+                cropper.getCroppedCanvas({
+                    width: 600,
+                    height: 600,
+                    imageSmoothingQuality: 'high'
+                }).toBlob((blob) => {
+                    croppedImages.push(blob);
+                    currentFileIndex++;
+                    processNextImage();
+                }, 'image/webp', 0.9);
+            });
+
+            document.getElementById('crop-skip').addEventListener('click', function () {
+                currentFileIndex++;
+                processNextImage();
+            });
+
+            document.getElementById('crop-cancel').addEventListener('click', function () {
+                document.getElementById('cropper-modal').classList.add('hidden');
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+                document.getElementById('product-images').value = '';
+                croppedImages = [];
+                imageFiles = [];
+                currentFileIndex = 0;
+                document.getElementById('cropped-images-info').classList.add('hidden');
+            });
+        }
+
+        function processNextImage() {
+            if (currentFileIndex >= imageFiles.length) {
+                document.getElementById('cropper-modal').classList.add('hidden');
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+
+                const infoDiv = document.getElementById('cropped-images-info');
+                infoDiv.classList.remove('hidden');
+                infoDiv.textContent = `✅ Готово к загрузке: ${croppedImages.length} изображений.`;
                 return;
             }
 
-            imageFiles = files;
-            currentFileIndex = 0;
-            croppedImages = [];
-            processNextImage();
-        });
+            const file = imageFiles[currentFileIndex];
+            const reader = new FileReader();
 
-        document.getElementById('crop-save').addEventListener('click', function () {
-            if (!cropper) return;
+            reader.onload = function (e) {
+                const imgElement = document.getElementById('cropper-image');
+                imgElement.src = e.target.result;
+                document.getElementById('cropper-progress').textContent =
+                    `Изображение ${currentFileIndex + 1} из ${imageFiles.length}`;
 
-            cropper.getCroppedCanvas({
-                width: 600,
-                height: 600,
-                imageSmoothingQuality: 'high'
-            }).toBlob((blob) => {
-                croppedImages.push(blob);
-                currentFileIndex++;
-                processNextImage();
-            }, 'image/webp', 0.9);
-        });
+                document.getElementById('cropper-modal').classList.add('hidden');
 
-        document.getElementById('crop-skip').addEventListener('click', function () {
-            currentFileIndex++;
-            processNextImage();
-        });
+                if (cropper) {
+                    cropper.destroy();
+                }
 
-        document.getElementById('crop-cancel').addEventListener('click', function () {
-            document.getElementById('cropper-modal').classList.add('hidden');
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-            document.getElementById('product-images').value = '';
-            croppedImages = [];
-            imageFiles = [];
-            currentFileIndex = 0;
-            document.getElementById('cropped-images-info').classList.add('hidden');
-        });
-    }
+                setTimeout(() => {
+                    cropper = new Cropper(imgElement, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        responsive: true,
+                        background: false,
+                        autoCropArea: 1,
+                    });
+                    document.getElementById('cropper-modal').classList.remove('hidden');
+                }, 250);
+            };
 
-    function processNextImage() {
-        if (currentFileIndex >= imageFiles.length) {
-            document.getElementById('cropper-modal').classList.add('hidden');
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-
-            const infoDiv = document.getElementById('cropped-images-info');
-            infoDiv.classList.remove('hidden');
-            infoDiv.textContent = `✅ Готово к загрузке: ${croppedImages.length} изображений.`;
-            return;
+            reader.readAsDataURL(file);
         }
 
-        const file = imageFiles[currentFileIndex];
-        const reader = new FileReader();
+        // ==================== BANNER CROPPER ====================
 
-        reader.onload = function (e) {
-            const imgElement = document.getElementById('cropper-image');
-            imgElement.src = e.target.result;
-            document.getElementById('cropper-progress').textContent =
-                `Изображение ${currentFileIndex + 1} из ${imageFiles.length}`;
+        function initBannerCropper() {
+            // УДАЛЕНА нерабочая привязка addEventListener к кнопке, т.к. в HTML уже есть onclick
 
-            document.getElementById('cropper-modal').classList.add('hidden');
+            // Обработчик кнопки "СОХРАНИТЬ ОБРЕЗАННЫЙ БАННЕР" (в модальном окне)
+            document.getElementById('banner-crop-save').addEventListener('click', function () {
+                if (!bannerCropper) return;
 
-            if (cropper) {
-                cropper.destroy();
+                bannerCropper.getCroppedCanvas({
+                    width: 800,
+                    height: 400,
+                    imageSmoothingQuality: 'high'
+                }).toBlob((blob) => {
+                    uploadBanner(blob);
+                }, 'image/webp', 0.9);
+            });
+
+            // Обработчик кнопки "Отменить"
+            document.getElementById('banner-crop-cancel').addEventListener('click', function () {
+                document.getElementById('banner-cropper-modal').classList.add('hidden');
+                if (bannerCropper) {
+                    bannerCropper.destroy();
+                    bannerCropper = null;
+                }
+                document.getElementById('banner-image-file').value = '';
+            });
+
+            // Обработчик изменения файла (Выбор файла)
+            document.getElementById('banner-image-file').addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    bannerImageFile = file; // Сохраняем файл для uploadBannerHandler
+                    // Если пользователь выбрал файл, процесс обрезки запускается через кнопку
+                }
+            });
+        }
+
+        // Эта функция вызывается кнопкой в HTML: onclick="uploadBannerHandler()"
+        function uploadBannerHandler() {
+            console.log("1. uploadBannerHandler: Функция начала работу.");
+
+            const fileInput = document.getElementById('banner-image-file');
+
+            if (!fileInput.files[0]) {
+                console.log("1.1. uploadBannerHandler: Файл не выбран.");
+                alert('Пожалуйста, выберите файл баннера');
+                return;
             }
 
-            setTimeout(() => {
-                cropper = new Cropper(imgElement, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    responsive: true,
-                    background: false,
-                    autoCropArea: 1,
-                });
-                document.getElementById('cropper-modal').classList.remove('hidden');
-            }, 250);
-        };
+            console.log("1.2. uploadBannerHandler: Файл выбран, вызываем processBannerImage.");
 
-        reader.readAsDataURL(file);
-    }
+            processBannerImage(fileInput.files[0]);
+        }
 
-    // ==================== BANNER CROPPER ====================
+        function processBannerImage(file) {
+            const reader = new FileReader();
 
-    function initBannerCropper() {
-        // УДАЛЕНА нерабочая привязка addEventListener к кнопке, т.к. в HTML уже есть onclick
-        
-        // Обработчик кнопки "СОХРАНИТЬ ОБРЕЗАННЫЙ БАННЕР" (в модальном окне)
-        document.getElementById('banner-crop-save').addEventListener('click', function () {
-            if (!bannerCropper) return;
+            reader.onload = function (e) {
+                const imgElement = document.getElementById('banner-cropper-image');
+                imgElement.src = e.target.result;
 
-            bannerCropper.getCroppedCanvas({
-                width: 800,
-                height: 400,
-                imageSmoothingQuality: 'high'
-            }).toBlob((blob) => {
-                uploadBanner(blob);
-            }, 'image/webp', 0.9);
-        });
+                document.getElementById('banner-cropper-progress').textContent = 'Настройте область обрезки для баннера';
+                document.getElementById('banner-cropper-modal').classList.add('hidden');
 
-        // Обработчик кнопки "Отменить"
-        document.getElementById('banner-crop-cancel').addEventListener('click', function () {
+                if (bannerCropper) {
+                    bannerCropper.destroy();
+                }
+
+                setTimeout(() => {
+                    bannerCropper = new Cropper(imgElement, {
+                        aspectRatio: 2,
+                        viewMode: 1,
+                        responsive: true,
+                        background: false,
+                        autoCropArea: 1,
+                    });
+                    document.getElementById('banner-cropper-modal').classList.remove('hidden');
+                }, 250);
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        // 🚩 ИСПРАВЛЕНИЕ: Получаем токен из LocalStorage
+        async function uploadBanner(bannerBlob) {
+            const messageDiv = document.getElementById('banner-message');
+            messageDiv.innerHTML = '<div class="success">⏳ Идет загрузка баннера...</div>';
+
             document.getElementById('banner-cropper-modal').classList.add('hidden');
             if (bannerCropper) {
                 bannerCropper.destroy();
                 bannerCropper = null;
             }
-            document.getElementById('banner-image-file').value = '';
-        });
 
-        // Обработчик изменения файла (Выбор файла)
-        document.getElementById('banner-image-file').addEventListener('change', function (event) {
-            const file = event.target.files[0];
-            if (file) {
-                bannerImageFile = file; // Сохраняем файл для uploadBannerHandler
-                // Если пользователь выбрал файл, процесс обрезки запускается через кнопку
-            }
-        });
-    }
-
-    // Эта функция вызывается кнопкой в HTML: onclick="uploadBannerHandler()"
-    function uploadBannerHandler() {
-        console.log("1. uploadBannerHandler: Функция начала работу.");
-
-        const fileInput = document.getElementById('banner-image-file');
-
-        if (!fileInput.files[0]) {
-            console.log("1.1. uploadBannerHandler: Файл не выбран.");
-            alert('Пожалуйста, выберите файл баннера');
-            return;
-        }
-
-        console.log("1.2. uploadBannerHandler: Файл выбран, вызываем processBannerImage.");
-
-        processBannerImage(fileInput.files[0]);
-    }
-
-    function processBannerImage(file) {
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            const imgElement = document.getElementById('banner-cropper-image');
-            imgElement.src = e.target.result;
-
-            document.getElementById('banner-cropper-progress').textContent = 'Настройте область обрезки для баннера';
-            document.getElementById('banner-cropper-modal').classList.add('hidden');
-
-            if (bannerCropper) {
-                bannerCropper.destroy();
+            // 🚩 ИСПРАВЛЕНИЕ: Получаем токен прямо перед отправкой, чтобы он был актуальным.
+            const token = localStorage.getItem('calistorAdminToken');
+            if (!token) {
+                messageDiv.innerHTML = '<div class="error">❌ Ошибка: Токен администратора отсутствует. Перезайдите.</div>';
+                return;
             }
 
-            setTimeout(() => {
-                bannerCropper = new Cropper(imgElement, {
-                    aspectRatio: 2,
-                    viewMode: 1,
-                    responsive: true,
-                    background: false,
-                    autoCropArea: 1,
+            const formData = new FormData();
+            formData.append('token', token); // 🚩 ИСПРАВЛЕНИЕ: Используем актуальный токен
+            formData.append('banner_image', bannerBlob, 'banner_cropped.webp');
+
+            try {
+                const response = await fetch('/api/admin/banner', {
+                    method: 'POST',
+                    body: formData
                 });
-                document.getElementById('banner-cropper-modal').classList.remove('hidden');
-            }, 250);
-        };
 
-        reader.readAsDataURL(file);
-    }
+                const data = await response.json();
 
-    // 🚩 ИСПРАВЛЕНИЕ: Получаем токен из LocalStorage
-    async function uploadBanner(bannerBlob) {
-        const messageDiv = document.getElementById('banner-message');
-        messageDiv.innerHTML = '<div class="success">⏳ Идет загрузка баннера...</div>';
-
-        document.getElementById('banner-cropper-modal').classList.add('hidden');
-        if (bannerCropper) {
-            bannerCropper.destroy();
-            bannerCropper = null;
-        }
-
-        // 🚩 ИСПРАВЛЕНИЕ: Получаем токен прямо перед отправкой, чтобы он был актуальным.
-        const token = localStorage.getItem('calistorAdminToken');
-        if (!token) {
-             messageDiv.innerHTML = '<div class="error">❌ Ошибка: Токен администратора отсутствует. Перезайдите.</div>';
-             return;
-        }
-        
-        const formData = new FormData();
-        formData.append('token', token); // 🚩 ИСПРАВЛЕНИЕ: Используем актуальный токен
-        formData.append('banner_image', bannerBlob, 'banner_cropped.webp');
-
-        try {
-            const response = await fetch('/api/admin/banner', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                messageDiv.innerHTML = `<div class="success">✅ Баннер успешно обновлен!</div>`;
-                document.getElementById('current-banner-preview').src =
-                    `/static/images/banner.webp?t=${new Date().getTime()}`;
-                document.getElementById('banner-image-file').value = '';
-            } else {
-                // Если ошибка 401, выведет 'Доступ запрещен'
-                messageDiv.innerHTML = `<div class="error">Ошибка: ${data.detail || 'Неизвестная ошибка'}</div>`;
+                if (response.ok) {
+                    messageDiv.innerHTML = `<div class="success">✅ Баннер успешно обновлен!</div>`;
+                    const url = (data.url || '/static/images/banner.webp') + `?t=${Date.now()}`;
+                    document.getElementById('current-banner-preview').src = url;
+                    document.getElementById('banner-image-file').value = '';
+                } else {
+                    messageDiv.innerHTML = `<div class="error">Ошибка: ${data.detail || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">❌ Ошибка соединения с сервером</div>';
             }
-        } catch (error) {
-            messageDiv.innerHTML = '<div class="error">❌ Ошибка соединения с сервером</div>';
-        }
-    }
-
-    // ==================== API FUNCTIONS ====================
-
-    async function addProduct() {
-        const name = document.getElementById('product-name').value;
-        const price = document.getElementById('product-price').value;
-        const color = document.getElementById('product-color').value;
-        const composition = document.getElementById('product-composition').value;
-        const description = document.getElementById('product-description').value;
-
-        if (!name || !price || !color || !composition || !description) {
-            alert('Пожалуйста, заполните все текстовые поля.');
-            return;
         }
 
-        const sizesData = getSizesData();
-        if (Object.keys(sizesData).length === 0) {
-            alert('Пожалуйста, выберите хотя бы один размер с количеством.');
-            return;
-        }
+        // ==================== API FUNCTIONS ====================
 
-        if (croppedImages.length === 0) {
-            alert('Пожалуйста, выберите и обработайте хотя бы одно изображение.');
-            return;
-        }
+        async function addProduct() {
+            const name = document.getElementById('product-name').value;
+            const price = document.getElementById('product-price').value;
+            const color = document.getElementById('product-color').value;
+            const composition = document.getElementById('product-composition').value;
+            const description = document.getElementById('product-description').value;
 
-        const formData = new FormData();
-        const token = localStorage.getItem('calistorAdminToken'); // Получаем токен перед отправкой
-        
-        formData.append('token', token);
-        formData.append('name', name);
-        formData.append('price', parseInt(price));
-        formData.append('color', color);
-        formData.append('composition', composition);
-        formData.append('description', description);
-        formData.append('available_sizes', JSON.stringify(sizesData));
-
-        for (let i = 0; i < croppedImages.length; i++) {
-            formData.append('images', croppedImages[i], `cropped_${i + 1}.webp`);
-        }
-
-        const messageDiv = document.getElementById('form-message');
-        messageDiv.innerHTML = '<div class="success">⏳ Идет загрузка...</div>';
-
-        try {
-            const response = await fetch('/api/admin/products', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                messageDiv.innerHTML = `<div class="success">✅ Товар успешно добавлен! Загружено ${croppedImages.length} изображений</div>`;
-
-                // Очистка формы
-                document.getElementById('product-name').value = '';
-                document.getElementById('product-price').value = '';
-                document.getElementById('product-color').value = '';
-                document.getElementById('product-composition').value = '';
-                document.getElementById('product-description').value = '';
-                document.getElementById('product-images').value = '';
-                document.getElementById('cropped-images-info').classList.add('hidden');
-
-                croppedImages = [];
-                initSizeManager();
-                loadProducts();
-            } else {
-                messageDiv.innerHTML = `<div class="error">❌ Ошибка: ${data.detail || 'Неизвестная ошибка'}</div>`;
+            if (!name || !price || !color || !composition || !description) {
+                alert('Пожалуйста, заполните все текстовые поля.');
+                return;
             }
-        } catch (error) {
-            messageDiv.innerHTML = '<div class="error">❌ Ошибка соединения с сервером</div>';
+
+            const sizesData = getSizesData();
+            if (Object.keys(sizesData).length === 0) {
+                alert('Пожалуйста, выберите хотя бы один размер с количеством.');
+                return;
+            }
+
+            if (croppedImages.length === 0) {
+                alert('Пожалуйста, выберите и обработайте хотя бы одно изображение.');
+                return;
+            }
+
+            const formData = new FormData();
+            const token = localStorage.getItem('calistorAdminToken'); // Получаем токен перед отправкой
+
+            formData.append('token', token);
+            formData.append('name', name);
+            formData.append('price', parseInt(price));
+            formData.append('color', color);
+            formData.append('composition', composition);
+            formData.append('description', description);
+            formData.append('available_sizes', JSON.stringify(sizesData));
+
+            for (let i = 0; i < croppedImages.length; i++) {
+                formData.append('images', croppedImages[i], `cropped_${i + 1}.webp`);
+            }
+
+            const messageDiv = document.getElementById('form-message');
+            messageDiv.innerHTML = '<div class="success">⏳ Идет загрузка...</div>';
+
+            try {
+                const response = await fetch('/api/admin/products', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.innerHTML = `<div class="success">✅ Товар успешно добавлен! Загружено ${croppedImages.length} изображений</div>`;
+
+                    // Очистка формы
+                    document.getElementById('product-name').value = '';
+                    document.getElementById('product-price').value = '';
+                    document.getElementById('product-color').value = '';
+                    document.getElementById('product-composition').value = '';
+                    document.getElementById('product-description').value = '';
+                    document.getElementById('product-images').value = '';
+                    document.getElementById('cropped-images-info').classList.add('hidden');
+
+                    croppedImages = [];
+                    initSizeManager();
+                    loadProducts();
+                } else {
+                    messageDiv.innerHTML = `<div class="error">❌ Ошибка: ${data.detail || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">❌ Ошибка соединения с сервером</div>';
+            }
         }
-    }
 
-    async function loadProducts() {
-        const token = localStorage.getItem('calistorAdminToken'); // Получаем токен
-        try {
-            const response = await fetch(`/api/admin/products?token=${token}`);
-            if (!response.ok) throw new Error('API error');
+        async function loadProducts() {
+            const token = localStorage.getItem('calistorAdminToken'); // Получаем токен
+            try {
+                const response = await fetch(`/api/admin/products?token=${token}`);
+                if (!response.ok) throw new Error('API error');
 
-            const products = await response.json();
-            const container = document.getElementById('products-container');
+                const products = await response.json();
+                const container = document.getElementById('products-container');
 
-            container.innerHTML = products.map(product => `
+                container.innerHTML = products.map(product => `
                 <div class="product-item">
                     <div class="product-info">
                         <h3>${product.name} <span style="font-size: 14px; font-weight: 400; color: #6c757d;">(ID: ${product.id || 'N/A'})</span></h3>
@@ -921,28 +920,28 @@
                         <div class="sizes-info">
                             <strong>Общее количество: ${Object.values(product.available_sizes || {}).reduce((a, b) => a + b, 0)} шт.</strong><br>
                             ${Object.entries(product.available_sizes || {}).map(([size, qty]) =>
-                `<span class="size-tag">${size}: ${qty} шт.</span>`).join('')}
+                    `<span class="size-tag">${size}: ${qty} шт.</span>`).join('')}
                         </div>
                     </div>
                     <button class="delete-btn" onclick="deleteProduct(${product.id})">Удалить</button>
                 </div>
             `).join('');
-        } catch (error) {
-            console.error('Ошибка загрузки товаров:', error);
-            document.getElementById('products-container').innerHTML = '<div class="error">❌ Не удалось загрузить список товаров</div>';
+            } catch (error) {
+                console.error('Ошибка загрузки товаров:', error);
+                document.getElementById('products-container').innerHTML = '<div class="error">❌ Не удалось загрузить список товаров</div>';
+            }
         }
-    }
 
-    async function loadStatistics() {
-        const token = localStorage.getItem('calistorAdminToken'); // Получаем токен
-        try {
-            const response = await fetch(`/api/admin/statistics?token=${token}`);
-            if (!response.ok) throw new Error('API error');
+        async function loadStatistics() {
+            const token = localStorage.getItem('calistorAdminToken'); // Получаем токен
+            try {
+                const response = await fetch(`/api/admin/statistics?token=${token}`);
+                if (!response.ok) throw new Error('API error');
 
-            const stats = await response.json();
-            const totalItems = Object.values(stats.size_breakdown || {}).reduce((a, b) => a + b, 0);
+                const stats = await response.json();
+                const totalItems = Object.values(stats.size_breakdown || {}).reduce((a, b) => a + b, 0);
 
-            document.getElementById('stats-overview').innerHTML = `
+                document.getElementById('stats-overview').innerHTML = `
                 <div class="stat-item">
                     <div class="stat-number">${stats.total_products || 0}</div>
                     <div class="stat-label">Всего товаров</div>
@@ -959,78 +958,78 @@
                 `).join('')}
             `;
 
-            document.getElementById('detailed-stats').innerHTML = (stats.products_stats || []).map(product => `
+                document.getElementById('detailed-stats').innerHTML = (stats.products_stats || []).map(product => `
                 <div class="stat-card product-item" style="display: block;">
                     <h4>${product.name} (ID: ${product.id})</h4>
                     <p><strong>Общее количество: ${product.total} шт.</strong></p>
                     <div class="sizes-info">
                         ${Object.entries(product.sizes).map(([size, qty]) =>
-                `<span class="size-tag" style="background: #fff3cd; color: #856404;">${size}: ${qty} шт.</span>`).join('')}
+                    `<span class="size-tag" style="background: #fff3cd; color: #856404;">${size}: ${qty} шт.</span>`).join('')}
                     </div>
                 </div>
             `).join('');
 
-        } catch (error) {
-            console.error('Ошибка загрузки статистики:', error);
-            document.getElementById('stats-overview').innerHTML = '<div class="error">❌ Не удалось загрузить статистику</div>';
-        }
-    }
-
-    async function deleteProduct(productId) {
-        if (!productId) {
-            alert('Невозможно удалить: ID товара не определен.');
-            return;
-        }
-
-        if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
-            return;
-        }
-
-        const token = localStorage.getItem('calistorAdminToken'); // Получаем токен
-
-        try {
-            const response = await fetch(`/api/admin/products/${productId}?token=${token}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                loadProducts();
-                if (!document.getElementById('statistics-tab').classList.contains('hidden')) {
-                    loadStatistics();
-                }
-            } else {
-                const data = await response.json();
-                alert(`❌ Ошибка: ${data.detail || 'Неизвестная ошибка'}`);
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+                document.getElementById('stats-overview').innerHTML = '<div class="error">❌ Не удалось загрузить статистику</div>';
             }
-        } catch (error) {
-            alert('❌ Ошибка соединения с сервером');
-        }
-    }
-
-    // ==================== INITIALIZATION ====================
-    document.addEventListener('DOMContentLoaded', function () {
-
-        const storedToken = localStorage.getItem('calistorAdminToken');
-
-        if (storedToken) {
-            adminToken = storedToken;
-            // Автоматически пропускаем вход
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('admin-section').classList.remove('hidden');
-
-            initSizeManager();
-            loadProducts();
-
-        } else {
-            document.getElementById('admin-section').classList.add('hidden');
-            document.getElementById('login-section').classList.remove('hidden');
         }
 
-        initImageCropper();
-        initBannerCropper();
-    });
+        async function deleteProduct(productId) {
+            if (!productId) {
+                alert('Невозможно удалить: ID товара не определен.');
+                return;
+            }
 
-</script>
+            if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
+                return;
+            }
+
+            const token = localStorage.getItem('calistorAdminToken'); // Получаем токен
+
+            try {
+                const response = await fetch(`/api/admin/products/${productId}?token=${token}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadProducts();
+                    if (!document.getElementById('statistics-tab').classList.contains('hidden')) {
+                        loadStatistics();
+                    }
+                } else {
+                    const data = await response.json();
+                    alert(`❌ Ошибка: ${data.detail || 'Неизвестная ошибка'}`);
+                }
+            } catch (error) {
+                alert('❌ Ошибка соединения с сервером');
+            }
+        }
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const storedToken = localStorage.getItem('calistorAdminToken');
+
+            if (storedToken) {
+                adminToken = storedToken;
+                // Автоматически пропускаем вход
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('admin-section').classList.remove('hidden');
+
+                initSizeManager();
+                loadProducts();
+
+            } else {
+                document.getElementById('admin-section').classList.add('hidden');
+                document.getElementById('login-section').classList.remove('hidden');
+            }
+
+            initImageCropper();
+            initBannerCropper();
+        });
+
+    </script>
 </body>
 
 </html>

@@ -2,6 +2,31 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 
+// === Автообновление Mini App при новой версии ===
+(async () => {
+  try {
+    // Загружаем текущую версию с сервера
+    const res = await fetch('/version.txt', { cache: 'no-store' });
+    if (!res.ok) return;
+    const serverVersion = (await res.text()).trim();
+
+    // Проверяем, что у нас в localStorage
+    const localVersion = localStorage.getItem('frontend_version');
+
+    // Если версия изменилась → обновляем страницу
+    if (localVersion && localVersion !== serverVersion) {
+      console.log('🔄 Новая версия фронтенда. Перезагружаем Mini App...');
+      localStorage.setItem('frontend_version', serverVersion);
+      location.reload(true);
+    } else {
+      localStorage.setItem('frontend_version', serverVersion);
+    }
+  } catch (err) {
+    console.warn('⚠️ Ошибка проверки версии:', err);
+  }
+})();
+
+
 let currentProduct = null;
 let selectedSize = null;
 let cart = [];
@@ -11,9 +36,7 @@ let pageHistory = ['home'];
 // ========== ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ==========
 function loadCart() {
     const savedCart = localStorage.getItem('calistor_cart');
-    if (savedCart) {
-        cart = JSON.parse(savedCart);
-    }
+    if (savedCart) cart = JSON.parse(savedCart);
     updateCartCount();
 }
 
@@ -25,20 +48,56 @@ function saveCart() {
 function updateCartCount() {
     const count = cart.reduce((total, item) => total + item.quantity, 0);
     const cartCountElement = document.getElementById('cart-count');
+    const cartButton = document.getElementById('cart-button');
+
     if (cartCountElement) {
         cartCountElement.textContent = count;
     }
+
+    if (cartButton) {
+        if (count > 0) {
+            cartButton.classList.add('visible');
+        } else {
+            cartButton.classList.remove('visible');
+        }
+    }
 }
+// Получаем параметры из Telegram WebApp URL
+function getQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  return Object.fromEntries(params.entries());
+}
+
+const query = getQueryParams();
+const initialProductId = query.product_id ? parseInt(query.product_id) : null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadCart();
+  loadMainBanner();
+
+  fetch("/api/products")
+    .then(res => res.json())
+    .then(products => {
+      allProducts = products;
+      renderProducts(products);
+
+      // 🟢 Если пришёл параметр product_id — сразу открываем этот товар
+      if (initialProductId) {
+        const product = allProducts.find(p => p.id === initialProductId);
+        if (product) showProductDetail(product);
+      }
+    })
+    .catch(err => console.error(err));
+});
+
+
 
 // ========== НАВИГАЦИЯ ==========
 function showPage(pageName) {
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-
-    const targetPage = document.getElementById(pageName + '-page');
-    if (targetPage) {
-        targetPage.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById(pageName + '-page');
+    if (target) {
+        target.classList.add('active');
         pageHistory.push(pageName);
     }
 }
@@ -46,8 +105,8 @@ function showPage(pageName) {
 function goBack() {
     if (pageHistory.length > 1) {
         pageHistory.pop();
-        const previousPage = pageHistory[pageHistory.length - 1];
-        showPage(previousPage);
+        const prev = pageHistory[pageHistory.length - 1];
+        showPage(prev);
     } else {
         showPage('home');
     }
@@ -55,23 +114,18 @@ function goBack() {
 
 // ========== ЗАГРУЗКА ТОВАРОВ ==========
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Определение функции
     function loadMainBanner() {
         const bannerImg = document.getElementById('main-banner');
-
         if (bannerImg) {
-            // 🟢 Логика обхода кэша
             const timestamp = new Date().getTime();
             bannerImg.src = `/static/images/banner.webp?t=${timestamp}`;
             console.log("Баннер загружен с обходом кэша.");
         }
     }
-    
-    // 2. Вызов функции
-    loadCart();
-    loadMainBanner(); // ✅ Вызываем функцию здесь, один раз при загрузке DOM
 
-    // 3. Остальная логика (загрузка товаров)
+    loadCart();
+    loadMainBanner();
+
     fetch("/api/products")
         .then(res => {
             if (!res.ok) throw new Error('Ошибка загрузки товаров');
@@ -88,16 +142,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 productList.innerHTML = '<p>Ошибка загрузки товаров</p>';
             }
         });
-}); // ✅ Здесь закрываем основной блок DOMContentLoaded
+});
 
 // ========== ОБРАБОТЧИК РАЗМЕРОВ ==========
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('size-btn')) {
-        document.querySelectorAll('.size-btn').forEach(btn => {
-            btn.classList.remove('selected');
-        });
+        document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('selected'));
         e.target.classList.add('selected');
         selectedSize = e.target.dataset.size;
+        const actions = document.querySelector('.product-actions');
+        if (actions) {
+            actions.classList.add('visible');
+        }
     }
 });
 
@@ -112,19 +168,15 @@ function renderProducts(products) {
             : product.image;
 
         return `
-        <div class="product" onclick="openProduct(${product.id})">
-            <img src="${mainImage}" alt="${product.name}" onerror="this.src='/static/images/placeholder.webp'" />
-            <h3>${product.name}</h3>
-            <p>${product.price}₽</p>
-            <button class="add-to-cart-small" onclick="event.stopPropagation(); addToCartFromCard(${product.id})">
-                В корзину
-            </button>
-        </div>
-        `;
+    <div class="product" onclick="openProduct(${product.id})">
+        <img src="${mainImage}" alt="${product.name}" onerror="this.src='/static/images/placeholder.webp'" />
+        <h3>${product.name}</h3>
+        <p>${product.price}₽</p>
+    </div>
+  `;
     }).join("");
+
 }
-
-
 
 // ========== СТРАНИЦА ТОВАРА ==========
 function openProduct(productId) {
@@ -138,60 +190,88 @@ function showProductDetail(product) {
     currentProduct = product;
     selectedSize = null;
 
-    // Заполняем данные
+    // --- Заполняем текст ---
     document.getElementById('product-title').textContent = product.name;
-    document.getElementById('product-price').textContent = `${product.price}₽`;
+    document.getElementById('product-price').textContent = product.price;
     document.getElementById('product-color').textContent = product.color;
     document.getElementById('product-composition').textContent = product.composition;
-
-    // Устанавливаем главное изображение
-    const mainImages = product.images_large || [product.image_large];
-    document.getElementById('product-main-image').src = mainImages[0] || product.image;
-
-    // Создаем галерею миниатюр если есть несколько изображений
-    const thumbnailsContainer = document.getElementById('product-thumbnails');
-    if (mainImages.length > 1) {
-        thumbnailsContainer.innerHTML = mainImages.map((img, index) => `
-            <img src="${img}" class="thumbnail ${index === 0 ? 'active' : ''}" 
-                 onclick="changeMainImage('${img}', this)">
-        `).join('');
-    } else {
-        thumbnailsContainer.innerHTML = '';
-    }
-
     document.getElementById('product-description-text').textContent = product.description;
 
-    // Динамически создаем кнопки размеров
-    const sizeButtonsContainer = document.getElementById('size-buttons');
-    if (sizeButtonsContainer) {
-        const availableSizes = product.sizes || [];
+    // const actions = document.querySelector('.product-actions');
+    // if (actions) actions.classList.remove('visible');
 
-        if (availableSizes.length > 0) {
-            sizeButtonsContainer.innerHTML = availableSizes.map(size => `
-                <button class="size-btn" data-size="${size}">${size}</button>
-            `).join('');
-        } else {
-            sizeButtonsContainer.innerHTML = '<p>Нет доступных размеров</p>';
-        }
+
+    // --- Размеры ---
+    const sizeButtonsContainer = document.getElementById('size-buttons');
+    const availableSizes = product.sizes || [];
+    if (availableSizes.length > 0) {
+        sizeButtonsContainer.innerHTML = availableSizes
+            .map(size => `<button class="size-btn" data-size="${size}">${size}</button>`)
+            .join('');
+    } else {
+        sizeButtonsContainer.innerHTML = '<p>Нет доступных размеров</p>';
     }
 
-    // Сбрасываем выбор размера
-    document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
+    // --- Галерея ---
+    const galleryImages =
+        product.images_large ||
+        product.images ||
+        [product.image_large || product.image];
 
-    // Показываем страницу товара
+    // Безопасная проверка: чтобы не падал при пустых данных
+    if (!galleryImages || galleryImages.length === 0) {
+        galleryImages = ["/static/images/placeholder.webp"];
+    }
+
+    // Передаём изображения в initGallery
+    initGallery(galleryImages);
+
+    // --- Переход на страницу товара ---
     showPage('product');
 }
 
-// Функция для смены главного изображения
-function changeMainImage(src, element) {
-    document.getElementById('product-main-image').src = src;
-    document.querySelectorAll('.thumbnail').forEach(thumb => {
-        thumb.classList.remove('active');
+// ========== ГАЛЕРЕЯ ==========
+function initGallery(images) {
+    if (!images || !images.length) return;
+
+    let idx = 0;
+    const main = document.getElementById('gallery-main');
+    const thumbs = document.getElementById('gallery-thumbs');
+
+    function renderThumbs() {
+        thumbs.innerHTML = '';
+        images.forEach((src, i) => {
+            const t = document.createElement('img');
+            t.src = src;
+            t.className = 'thumb' + (i === idx ? ' active' : '');
+            t.addEventListener('click', () => { idx = i; update(); });
+            thumbs.appendChild(t);
+        });
+    }
+
+    function update() {
+        main.src = images[idx];
+        [...document.querySelectorAll('.thumb')].forEach((el, i) =>
+            el.classList.toggle('active', i === idx)
+        );
+    }
+
+    // 🟢 Свайп жесты
+    let startX = 0;
+    main.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; });
+    main.addEventListener('touchend', (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const diff = endX - startX;
+        if (Math.abs(diff) > 50) { // свайп
+            idx = (idx + (diff > 0 ? -1 : 1) + images.length) % images.length;
+            update();
+        }
     });
-    element.classList.add('active');
+
+    renderThumbs();
+    update();
 }
+
 
 // ========== КОРЗИНА ==========
 function addToCartFromCard(productId) {
@@ -199,10 +279,8 @@ function addToCartFromCard(productId) {
     if (!product) return;
 
     const availableSizes = product.sizes || [];
-
     if (availableSizes.length === 1) {
         const autoSize = availableSizes[0];
-
         const cartItem = {
             id: Date.now(),
             productId: product.id,
@@ -213,7 +291,6 @@ function addToCartFromCard(productId) {
             image: product.image,
             quantity: 1
         };
-
         cart.push(cartItem);
         saveCart();
 
@@ -237,6 +314,13 @@ function addToCartFromCard(productId) {
         });
     }
 }
+function buyNow(productId) {
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
+
+    addToCartFromCard(productId);
+    openCart();
+}
 
 function addToCartFromDetail() {
     if (!currentProduct) return;
@@ -247,7 +331,7 @@ function addToCartFromDetail() {
             message: "Пожалуйста, выберите размер перед добавлением в корзину",
             buttons: [{ type: "ok" }]
         });
-        return;
+        
     }
 
     const cartItem = {
@@ -291,8 +375,7 @@ function renderCart() {
     }
 
     emptyCart.style.display = 'none';
-
-    const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
     totalPriceElement.textContent = totalPrice;
 
     cartContainer.innerHTML = cart.map(item => `
@@ -300,9 +383,7 @@ function renderCart() {
             <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='/static/images/placeholder.webp'">
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-details">
-                    Размер: ${item.size} | Цвет: ${item.color}
-                </div>
+                <div class="cart-item-details">Размер: ${item.size} | Цвет: ${item.color}</div>
                 <div class="cart-item-price">${item.price}₽</div>
             </div>
             <button class="cart-item-remove" onclick="removeFromCart(${item.id})">🗑️</button>
@@ -323,56 +404,96 @@ function checkout() {
         return;
     }
 
-    const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const totalPrice = cart.reduce((t, i) => t + i.price * i.quantity, 0);
     const user = tg.initDataUnsafe.user || {};
-
     const orderData = {
         products: cart,
         total_price: totalPrice,
-        user: {
-            id: user.id,
-            first_name: user.first_name,
-            username: user.username,
-            language_code: user.language_code
-        }
+        user
     };
 
     tg.showConfirm("Отправить заказ менеджеру?", (confirmed) => {
-        if (confirmed) {
-            tg.MainButton.showProgress();
+        if (!confirmed) return;
+        tg.MainButton.showProgress();
 
-            fetch("/api/order", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(orderData)
+        fetch("/api/order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderData)
+        })
+            .then(res => res.json())
+            .then(data => {
+                tg.MainButton.hideProgress();
+                if (data.status === "success") {
+                    cart = [];
+                    saveCart();
+                    renderCart();
+                    showPage('home');
+                    tg.showAlert("✅ Заказ отправлен!");
+                } else throw new Error(data.detail);
             })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { throw new Error(err.detail) });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    tg.MainButton.hideProgress();
-
-                    if (data.status === "success") {
-                        cart = [];
-                        saveCart();
-                        renderCart();
-                        showPage('home');
-
-                        tg.showAlert("✅ Заказ отправлен! Менеджер свяжется с вами в ближайшее время.");
-                    } else {
-                        throw new Error(data.detail);
-                    }
-                })
-                .catch(error => {
-                    tg.MainButton.hideProgress();
-                    console.error("Order error:", error);
-                    tg.showAlert("❌ Ошибка отправки заказа: " + error.message);
-                });
-        }
+            .catch(error => {
+                tg.MainButton.hideProgress();
+                tg.showAlert("❌ Ошибка: " + error.message);
+            });
     });
 }
+function shareProduct() {
+  if (!currentProduct) return;
+
+  const botUsername = "botchickcalis_bot";
+  const link = `https://t.me/${botUsername}?start=store_${currentProduct.id}`;
+  const text = `👕 ${currentProduct.name} — ${currentProduct.price}₽\n${currentProduct.description}\n\n${link}`;
+
+  tg.showPopup({
+    title: "Поделиться товаром",
+    message: "Скопируй ссылку и отправь другу в Telegram:",
+    buttons: [
+      { id: "copy", type: "ok", text: "📋 Скопировать ссылку" },
+      { type: "cancel", text: "Закрыть" }
+    ]
+  });
+
+  // Обработчик кнопок
+  window.Telegram.WebApp.onEvent('popupClosed', function (event) {
+    if (event.button_id === "copy") {
+      navigator.clipboard.writeText(link);
+      tg.showAlert("Ссылка скопирована!");
+    }
+  });
+}
+
+function sendToFriend() {
+  if (!currentProduct) return;
+
+  tg.showPopup({
+    title: "Отправить другу",
+    message: "Введи @username друга (например, @rustem)",
+    buttons: [
+      { id: "send", type: "ok", text: "Отправить" },
+      { type: "cancel" },
+    ]
+  });
+
+  // ⚠️ Примерно, если хочешь сделать ввод — можно позже заменить на форму Telegram WebAppInput
+  // Для теста отправим прямо себе:
+  const chatId = tg.initDataUnsafe?.user?.id; // пока отправляем самому себе
+
+  fetch("/api/share", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      product_id: currentProduct.id
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      tg.showAlert("✅ Товар отправлен!");
+    })
+    .catch(err => {
+      console.error(err);
+      tg.showAlert("❌ Ошибка при отправке");
+    });
+}
+

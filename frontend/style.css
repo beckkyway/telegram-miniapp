@@ -81,15 +81,10 @@ button {
     line-height: 1.5;
 }
 
-.p2 {
-    background: #111;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 100px;
-    display: inline-block;
-    margin-bottom: 16px;
-    font-size: 12px;
-    letter-spacing: 0.5px;
+.p2-text {
+    color: #111;
+    font-size: 14px;
+    margin-top: 10px;
 }
 
 /* =======================
@@ -490,3 +485,222 @@ button {
         font-size: 26px;
     }
 }
+
+/* === Price + Button refresh === */
+.price {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    line-height: 1;
+    margin: 8px 0 14px;
+}
+
+.price .amount {
+    font-variant-numeric: tabular-nums;
+}
+
+.price .currency {
+    opacity: .7;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+/* универсальная кнопка */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 14px 16px;
+    border: 0;
+    border-radius: 14px;
+    background: #007aff;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 8px 20px rgba(0, 122, 255, .25);
+    cursor: pointer;
+    transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 10px 24px rgba(0, 122, 255, .33);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+.btn-primary:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+/* === Product gallery === */
+.gallery {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+#gallery-main {
+    width: 100%;
+    height: auto;
+    border-radius: 16px;
+    display: block;
+    background: #f4f6f8;
+}
+
+.gallery .nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(0, 0, 0, .35);
+    cursor: pointer;
+}
+
+.gallery .prev {
+    left: 8px;
+}
+
+.gallery .next {
+    right: 8px;
+}
+
+.gallery .nav:active {
+    transform: translateY(-50%) scale(.98);
+}
+
+.thumbs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 2px 2px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.thumb {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 10px;
+    opacity: .6;
+    border: 2px solid transparent;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.thumb.active {
+    opacity: 1;
+    border-color: #007aff;
+}
+
+.card-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.buy-now {
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.buy-now:hover {
+    background: #333;
+}
+
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.add-to-cart-btn,
+.buy-now-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-to-cart-btn {
+    background: #007aff;
+    color: #fff;
+    border: none;
+}
+
+.add-to-cart-btn:hover {
+    background: #005ecb;
+}
+
+.buy-now-btn {
+    background: #111;
+    color: #fff;
+    border: none;
+}
+
+.buy-now-btn:hover {
+    background: #333;
+}
+/* ==== АНИМАЦИЯ КНОПКИ КОРЗИНЫ ==== */
+#cart-button {
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  display: inline-flex; /* чтобы сохранялась форма кнопки */
+  pointer-events: none; /* пока скрыта — не кликается */
+}
+
+#cart-button.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.header-buttons {
+  position: relative;
+  height: 60px;
+}
+
+#cart-button {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 15px);
+}
+.product-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.share-btn {
+  background: #ededed;
+  border: none;
+  color: #000;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+  transition: all .3s ease;
+}
+.share-btn:hover {
+  background: #dcdcdc;
+}
+
+

@@ -315,38 +315,64 @@ async def upload_banner(
     token: str = Form(...),
     banner_image: UploadFile = File(...)
 ):
-    """Загрузка баннера"""
-    print(f"[DEBUG] Upload banner request")
-    
-    # 1. Проверка токена
+    """
+    Принимает баннер, проверяет токен/тип/размер, сохраняет в frontend/images/banner.webp
+    Возвращает публичный URL для клиента.
+    """
+    # 1) Токен
     if not verify_admin_token(token):
-        # 🚨 Ваша главная проблема, судя по скриншотам, вот здесь (401)
         raise HTTPException(status_code=401, detail="Доступ запрещен")
 
-    # 2. Проверка и создание директории
-    if not os.path.exists(FRONTEND_DIR):
-        raise HTTPException(status_code=500, detail="Frontend directory not found")
-
+    # 2) Пути и каталоги
+    # BASE_DIR = backend/, PROJECT_ROOT = корень проекта, FRONTEND_DIR = <root>/frontend
     image_dir = os.path.join(FRONTEND_DIR, "images")
-    # 🟢 Создание папки, если она не существует (это у вас уже есть)
-    os.makedirs(image_dir, exist_ok=True) 
-    
-    output_path = os.path.join(image_dir, 'banner.webp')
-    
+    os.makedirs(image_dir, exist_ok=True)
+    tmp_path = os.path.join(image_dir, "_banner_upload.tmp")
+    output_path = os.path.join(image_dir, "banner.webp")  # итоговый
+
+    # 3) Лимиты/форматы
+    max_mb = float(os.getenv("MAX_BANNER_MB", "3"))
+    allowed = set(os.getenv("ALLOWED_BANNER_TYPES", "webp,jpeg,png").lower().split(","))
+    ext = (banner_image.filename or "").split(".")[-1].lower()
+
+    if ext not in allowed:
+        raise HTTPException(status_code=415, detail=f"Недопустимый формат: .{ext}. Допустимо: {', '.join(sorted(allowed))}")
+
+    # 4) Получаем байты и проверяем размер
+    content = await banner_image.read()
+    size_mb = len(content) / (1024 * 1024)
+    if size_mb > max_mb:
+        raise HTTPException(status_code=413, detail=f"Файл слишком большой ({size_mb:.1f} МБ). Лимит: {max_mb} МБ")
+
+    # 5) Гарантированно преобразуем в WebP и пишем атомарно
+    from io import BytesIO
+    from PIL import Image
+
     try:
-        # 3. Чтение файла и сохранение
-        content = await banner_image.read()
-        
-        with open(output_path, "wb") as buffer:
-            buffer.write(content)
-            
-        print(f"[DEBUG] Banner saved to: {output_path}")
-        return {"status": "success", "message": "Баннер успешно обновлен!", "path": output_path}
-        
+        img = Image.open(BytesIO(content)).convert("RGB")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Не удалось прочитать изображение")
+
+    # Нормализуем размер (опционально): не шире 1600px, пропорции сохраняем
+    max_w = 1600
+    if img.width > max_w:
+        ratio = max_w / img.width
+        img = img.resize((int(img.width * ratio), int(img.height * ratio)))
+
+    # Пишем во временный файл, потом переименовываем (атомарная запись)
+    try:
+        img.save(tmp_path, format="WEBP", quality=90, method=6)
+        os.replace(tmp_path, output_path)
     except Exception as e:
-        print(f"[ERROR] Banner upload error: {e}")
-        # Возвращаем 500 ошибку, если что-то пошло не так при сохранении
+        # чистим tmp в случае падения
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
         raise HTTPException(status_code=500, detail=f"Ошибка сохранения баннера: {e}")
+
+    # 6) Возвращаем ПУБЛИЧНЫЙ URL, чтобы фронт мог сразу подхватить
+    public_url = "/static/images/banner.webp"
+    return {"status": "success", "message": "Баннер успешно обновлен!", "url": public_url}
+
     
 @app.delete("/api/admin/products/{product_id}")
 def delete_product(product_id: int, token: str):
@@ -407,6 +433,58 @@ def test_endpoint():
         "message": "Сервер работает",
         "timestamp": datetime.datetime.now().isoformat()
     }
+# ======== Поделиться товаром ========
+
+@app.post("/api/share")
+async def share_product(data: dict):
+    """
+    Отправка карточки товара в Telegram другу
+    """
+    try:
+        bot_token = os.getenv("BOT_TOKEN")
+        if not bot_token:
+            raise HTTPException(status_code=500, detail="BOT_TOKEN not configured")
+
+        chat_id = data.get("chat_id")
+        product_id = data.get("product_id")
+
+        if not chat_id or not product_id:
+            raise HTTPException(status_code=400, detail="Missing chat_id or product_id")
+
+        products = load_products()
+        product = next((p for p in products if p["id"] == product_id), None)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        bot_username = os.getenv("BOT_USERNAME", "botchickcalis_bot")
+        link = f"https://t.me/{bot_username}?start=store_{product_id}"
+
+        text = (
+            f"👕 <b>{product['name']}</b>\n"
+            f"{product['price']}₽\n"
+            f"{product['description'][:150]}...\n\n"
+            f"<a href='{link}'>Открыть товар</a>"
+        )
+
+        photo = product.get("image_large") or product.get("image")
+
+        url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+        payload = {
+            "chat_id": chat_id,
+            "photo": photo,
+            "caption": text,
+            "parse_mode": "HTML",
+        }
+
+        r = requests.post(url, data=payload)
+        if r.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Telegram API error: {r.text}")
+
+        return {"status": "success", "message": "Товар успешно отправлен!"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ======== Заказы ========
 
