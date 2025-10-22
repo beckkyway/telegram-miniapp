@@ -7,6 +7,8 @@ import os
 import json
 import requests
 import datetime
+from dotenv import load_dotenv
+load_dotenv()
 
 # Пытаемся импортировать image_processor, но если его нет - создаем заглушку
 try:
@@ -511,6 +513,7 @@ def format_order_message(order_data):
     products_list = order_data.get("products", [])
     user_info = order_data.get("user", {})
     total_price = order_data.get("total_price", 0)
+    promo_code = order_data.get("promo")
 
     msg = "🛍️ <b>НОВЫЙ ЗАКАЗ ИЗ MINI APP</b>\n\n"
     msg += "<b>Товары:</b>\n"
@@ -519,13 +522,99 @@ def format_order_message(order_data):
         msg += f"   • Размер: {p.get('size','-')}\n"
         msg += f"   • Цвет: {p.get('color','-')}\n"
         msg += f"   • Цена: {p.get('price','-')}₽\n\n"
-    msg += f"💰 <b>Итого: {total_price}₽</b>\n\n"
+
+    # если применён промокод — показать скидку
+    if promo_code:
+        msg += f"💸 <b>Промокод:</b> {promo_code}\n"
+
+    msg += f"💰 <b>Итого со скидкой: {total_price}₽</b>\n\n"
     msg += "<b>Информация о покупателе:</b>\n"
     msg += f"👤 ID: {user_info.get('id', 'Неизвестно')}\n"
     msg += f"📛 Имя: {user_info.get('first_name', 'Неизвестно')}\n"
     msg += f"📞 Username: @{user_info.get('username', 'Не указан')}\n"
     return msg
 
+
+
+
+import json
+from pathlib import Path
+
+PROMO_FILE = Path(__file__).parent / "promos.json"
+
+def load_promos():
+    """Загрузка промокодов из файла"""
+    if PROMO_FILE.exists():
+        with open(PROMO_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {}
+    return {}
+
+def save_promos(data):
+    """Сохранение промокодов в файл"""
+    with open(PROMO_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+# === Загружаем промокоды при старте ===
+promo_db = load_promos()
+
+# === Эндпоинты управления промокодами ===
+@app.get("/api/admin/promocodes")
+async def get_promocodes(token: str):
+    if token != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный токен")
+    promos = load_promos()
+    return [{"code": k, **v} for k, v in promos.items()]
+
+@app.post("/api/admin/promocodes")
+async def add_promocode(data: dict):
+    if data.get("token") != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный токен")
+
+    code = data.get("code", "").strip().lower()
+    discount = data.get("discount")
+    description = data.get("description", "")
+
+    if not code or not isinstance(discount, (int, float)) or discount <= 0:
+        raise HTTPException(status_code=400, detail="Некорректные данные")
+
+    promos = load_promos()
+    promos[code] = {"discount": discount, "description": description}
+    save_promos(promos)
+
+    return {"status": "ok", "code": code, "discount": discount}
+
+@app.delete("/api/admin/promocodes/{code}")
+async def delete_promocode(code: str, token: str):
+    if token != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный токен")
+
+    promos = load_promos()
+    code = code.lower()
+    if code not in promos:
+        raise HTTPException(status_code=404, detail="Промокод не найден")
+
+    del promos[code]
+    save_promos(promos)
+    return {"status": "deleted", "code": code}
+
+# === Проверка промокодов, используем тот же файл ===
+@app.post("/api/promo")
+async def check_promo(data: dict):
+    code = data.get("code", "").strip().lower()
+    promos = load_promos()
+    if code in promos:
+        return {"valid": True, "discount": promos[code]["discount"]}
+    return {"valid": False}
+
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+    
+ 

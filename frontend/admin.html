@@ -331,6 +331,7 @@
                 <button class="tab-btn active" onclick="showTab('products')">📦 Управление товарами</button>
                 <button class="tab-btn" onclick="showTab('statistics')">📊 Статистика</button>
                 <button class="tab-btn" onclick="showTab('settings')">⚙️ Настройки</button>
+                <button class="tab-btn" onclick="showTab('promocodes')">💸 Промокоды</button>
             </div>
 
             <div id="products-tab">
@@ -401,6 +402,24 @@
                     </div>
                 </div>
             </div>
+            <div id="promocodes-tab" class="hidden">
+                <div class="stats-section">
+                    <h2>💸 Управление промокодами</h2>
+
+                    <div class="product-form">
+                        <h3>➕ Добавить промокод</h3>
+                        <input type="text" id="promo-code" placeholder="Код (например: calistor10)" required>
+                        <input type="number" id="promo-discount" placeholder="Скидка (%)" min="1" max="100" required>
+                        <input type="text" id="promo-description" placeholder="Описание (необязательно)">
+                        <button onclick="addPromoCode()">Добавить промокод</button>
+                        <div id="promo-message"></div>
+                    </div>
+
+                    <h3>📋 Список промокодов</h3>
+                    <div id="promos-container"></div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -485,6 +504,10 @@
                 const preview = document.getElementById('current-banner-preview');
                 preview.src = `/static/images/banner.webp?t=${new Date().getTime()}`;
             }
+            if (tabName === 'promocodes') {
+                loadPromoCodes();
+            }
+
         }
 
         function getTabButtonText(tabName) {
@@ -1005,6 +1028,88 @@
                 alert('❌ Ошибка соединения с сервером');
             }
         }
+
+        // ==================== PROMO CODES ====================
+
+        async function loadPromoCodes() {
+            const token = localStorage.getItem('calistorAdminToken');
+            const container = document.getElementById('promos-container');
+            container.innerHTML = '<p>⏳ Загрузка...</p>';
+
+            try {
+                const res = await fetch(`/api/admin/promocodes?token=${token}`);
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || 'Ошибка загрузки');
+
+                container.innerHTML = data.length
+                    ? data.map(promo => `
+                <div class="product-item">
+                    <div class="product-info">
+                        <h3>${promo.code}</h3>
+                        <p>Скидка: <strong>${promo.discount}%</strong></p>
+                        <p>${promo.description || ''}</p>
+                    </div>
+                    <button class="delete-btn" onclick="deletePromoCode('${promo.code}')">Удалить</button>
+                </div>
+            `).join('')
+                    : '<p>Промокодов пока нет.</p>';
+            } catch (err) {
+                container.innerHTML = `<div class="error">Ошибка: ${err.message}</div>`;
+            }
+        }
+
+        async function addPromoCode() {
+            const code = document.getElementById('promo-code').value.trim();
+            const discount = parseInt(document.getElementById('promo-discount').value);
+            const description = document.getElementById('promo-description').value.trim();
+            const message = document.getElementById('promo-message');
+
+            if (!code || !discount) {
+                message.innerHTML = '<div class="error">❌ Введите код и скидку.</div>';
+                return;
+            }
+
+            const token = localStorage.getItem('calistorAdminToken');
+            try {
+                const res = await fetch('/api/admin/promocodes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, code, discount, description })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    message.innerHTML = '<div class="success">✅ Промокод добавлен!</div>';
+                    loadPromoCodes();
+                    document.getElementById('promo-code').value = '';
+                    document.getElementById('promo-discount').value = '';
+                    document.getElementById('promo-description').value = '';
+                } else {
+                    message.innerHTML = `<div class="error">❌ ${data.detail || 'Ошибка сервера'}</div>`;
+                }
+            } catch (err) {
+                message.innerHTML = '<div class="error">⚠️ Ошибка соединения с сервером.</div>';
+            }
+        }
+
+        async function deletePromoCode(code) {
+            if (!confirm(`Удалить промокод "${code}"?`)) return;
+
+            const token = localStorage.getItem('calistorAdminToken');
+            try {
+                const res = await fetch(`/api/admin/promocodes/${code}?token=${token}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) {
+                    loadPromoCodes();
+                } else {
+                    alert(`Ошибка: ${data.detail}`);
+                }
+            } catch (err) {
+                alert('⚠️ Ошибка соединения с сервером.');
+            }
+        }
+
 
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', function () {

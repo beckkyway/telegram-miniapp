@@ -721,4 +721,41 @@ button {
   opacity: 1;
   transform: translateY(0);
 }
+.promo-section {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
 
+#promo-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+#apply-promo {
+  background: #111;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#apply-promo:hover {
+  background: #333;
+}
+
+#promo-message {
+  font-size: 14px;
+  color: green;
+  margin-top: 5px;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #999;
+  margin-right: 8px;
+}

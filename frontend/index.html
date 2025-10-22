@@ -22,7 +22,8 @@
                 <p>digital minimalism <br> street wear born in Ufa</p>
                 <div class="p2">for you</div>
                 <div class="header-buttons">
-                    <button id="cart-button" class="b1" onclick="openCart()">корзина <span id="cart-count">0</span></button>
+                    <button id="cart-button" class="b1" onclick="openCart()">корзина <span
+                            id="cart-count">0</span></button>
                 </div>
             </div>
         </header>
@@ -90,9 +91,21 @@
             <div id="cart-items"></div>
 
             <div class="cart-total">
-                <h3>Итого: <span id="total-price">0</span>₽</h3>
+                <h3>
+                    Итого:
+                    <span class="old-price" id="old-total-price" style="display:none;"></span>
+                    <span id="total-price">0</span>₽
+                </h3>
+
+                <div class="promo-section">
+                    <input type="text" id="promo-input" placeholder="Введите промокод">
+                    <button id="apply-promo">Применить</button>
+                </div>
+                <p id="promo-message"></p>
+
                 <button class="checkout-btn" onclick="checkout()">Оформить заказ</button>
             </div>
+
 
             <div id="empty-cart" class="empty-cart">
                 <p>Корзина пуста</p>

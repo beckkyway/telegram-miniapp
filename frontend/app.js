@@ -4,26 +4,26 @@ tg.ready();
 
 // === Автообновление Mini App при новой версии ===
 (async () => {
-  try {
-    // Загружаем текущую версию с сервера
-    const res = await fetch('/version.txt', { cache: 'no-store' });
-    if (!res.ok) return;
-    const serverVersion = (await res.text()).trim();
+    try {
+        // Загружаем текущую версию с сервера
+        const res = await fetch('/version.txt', { cache: 'no-store' });
+        if (!res.ok) return;
+        const serverVersion = (await res.text()).trim();
 
-    // Проверяем, что у нас в localStorage
-    const localVersion = localStorage.getItem('frontend_version');
+        // Проверяем, что у нас в localStorage
+        const localVersion = localStorage.getItem('frontend_version');
 
-    // Если версия изменилась → обновляем страницу
-    if (localVersion && localVersion !== serverVersion) {
-      console.log('🔄 Новая версия фронтенда. Перезагружаем Mini App...');
-      localStorage.setItem('frontend_version', serverVersion);
-      location.reload(true);
-    } else {
-      localStorage.setItem('frontend_version', serverVersion);
+        // Если версия изменилась → обновляем страницу
+        if (localVersion && localVersion !== serverVersion) {
+            console.log('🔄 Новая версия фронтенда. Перезагружаем Mini App...');
+            localStorage.setItem('frontend_version', serverVersion);
+            location.reload(true);
+        } else {
+            localStorage.setItem('frontend_version', serverVersion);
+        }
+    } catch (err) {
+        console.warn('⚠️ Ошибка проверки версии:', err);
     }
-  } catch (err) {
-    console.warn('⚠️ Ошибка проверки версии:', err);
-  }
 })();
 
 
@@ -64,49 +64,49 @@ function updateCartCount() {
 }
 // Получаем параметры из Telegram WebApp URL
 function getQueryParams() {
-  const params = new URLSearchParams(window.location.search);
-  return Object.fromEntries(params.entries());
+    const params = new URLSearchParams(window.location.search);
+    return Object.fromEntries(params.entries());
 }
 
 const query = getQueryParams();
 const initialProductId = query.product_id ? parseInt(query.product_id) : null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadCart();
-  loadMainBanner();
+    loadCart();
+    loadMainBanner();
 
-  fetch("/api/products")
-    .then(res => res.json())
-    .then(products => {
-      allProducts = products;
-      renderProducts(products);
+    fetch("/api/products")
+        .then(res => res.json())
+        .then(products => {
+            allProducts = products;
+            renderProducts(products);
 
-      // 🟢 Если пришёл параметр product_id — сразу открываем этот товар
-      if (initialProductId) {
-        const product = allProducts.find(p => p.id === initialProductId);
-        if (product) showProductDetail(product);
-      }
-    })
-    .catch(err => console.error(err));
+            // 🟢 Если пришёл параметр product_id — сразу открываем этот товар
+            if (initialProductId) {
+                const product = allProducts.find(p => p.id === initialProductId);
+                if (product) showProductDetail(product);
+            }
+        })
+        .catch(err => console.error(err));
 });
 
 
 
 // ========== НАВИГАЦИЯ ==========
 function showPage(pageName) {
-  const pages = document.querySelectorAll('.page');
-  pages.forEach(page => {
-    page.classList.remove('active');
-  });
+    const pages = document.querySelectorAll('.page');
+    pages.forEach(page => {
+        page.classList.remove('active');
+    });
 
-  const targetPage = document.getElementById(`${pageName}-page`);
-  if (targetPage) {
-    // Добавляем небольшую задержку, чтобы анимация успела отработать
-    setTimeout(() => {
-      targetPage.classList.add('active');
-      window.scrollTo(0, 0); // сбрасываем прокрутку
-    }, 50);
-  }
+    const targetPage = document.getElementById(`${pageName}-page`);
+    if (targetPage) {
+        // Добавляем небольшую задержку, чтобы анимация успела отработать
+        setTimeout(() => {
+            targetPage.classList.add('active');
+            window.scrollTo(0, 0); // сбрасываем прокрутку
+        }, 50);
+    }
 }
 
 function goBack() {
@@ -338,7 +338,7 @@ function addToCartFromDetail() {
             message: "Пожалуйста, выберите размер перед добавлением в корзину",
             buttons: [{ type: "ok" }]
         });
-        
+
     }
 
     const cartItem = {
@@ -404,6 +404,61 @@ function removeFromCart(itemId) {
     renderCart();
 }
 
+// === ПРОМОКОД ===
+
+let appliedDiscount = 0;
+
+// Привязка кнопки
+document.addEventListener("click", (e) => {
+  if (e.target.id === "apply-promo") {
+    applyPromo();
+  }
+});
+
+async function applyPromo() {
+  const code = document.getElementById("promo-input").value.trim();
+  const msg = document.getElementById("promo-message");
+  const oldTotalElem = document.getElementById("old-total-price");
+  const totalElem = document.getElementById("total-price");
+
+  if (!code) {
+    msg.textContent = "Введите промокод";
+    msg.style.color = "red";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/promo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+
+    const data = await res.json();
+
+    if (data.valid) {
+      const oldTotal = parseInt(totalElem.textContent);
+      const discount = data.discount;
+      const newTotal = Math.round(oldTotal * (1 - discount / 100));
+
+      oldTotalElem.style.display = "inline";
+      oldTotalElem.textContent = `${oldTotal}₽`;
+      totalElem.textContent = newTotal;
+
+      msg.textContent = `✅ Скидка ${discount}% применена`;
+      msg.style.color = "green";
+    } else {
+      msg.textContent = "❌ Неверный промокод";
+      msg.style.color = "red";
+    }
+  } catch (err) {
+    console.error("Ошибка при применении промокода:", err);
+    msg.textContent = "⚠️ Ошибка сервера";
+    msg.style.color = "red";
+  }
+}
+
+
 // ========== ОФОРМЛЕНИЕ ЗАКАЗА ==========
 function checkout() {
     if (cart.length === 0) {
@@ -411,12 +466,22 @@ function checkout() {
         return;
     }
 
-    const totalPrice = cart.reduce((t, i) => t + i.price * i.quantity, 0);
+    // Берём итоговую сумму со скидкой из DOM (а не пересчитываем вручную)
+    const totalPriceElem = document.getElementById("total-price");
+    const totalPrice = parseInt(totalPriceElem?.textContent || 0);
+
+    // Берём промокод (если введён)
+    const promoInput = document.getElementById("promo-input");
+    const promoCode = promoInput ? promoInput.value.trim() : null;
+
     const user = tg.initDataUnsafe.user || {};
+
+    // Добавляем промокод в orderData
     const orderData = {
         products: cart,
         total_price: totalPrice,
-        user
+        user,
+        promo: promoCode || null
     };
 
     tg.showConfirm("Отправить заказ менеджеру?", (confirmed) => {
@@ -445,62 +510,64 @@ function checkout() {
             });
     });
 }
+
 function shareProduct() {
-  if (!currentProduct) return;
+    if (!currentProduct) return;
 
-  const botUsername = "botchickcalis_bot";
-  const link = `https://t.me/${botUsername}?start=store_${currentProduct.id}`;
-  const text = `👕 ${currentProduct.name} — ${currentProduct.price}₽\n${currentProduct.description}\n\n${link}`;
+    const botUsername = "botchickcalis_bot";
+    const link = `https://t.me/${botUsername}?start=store_${currentProduct.id}`;
+    const text = `👕 ${currentProduct.name} — ${currentProduct.price}₽\n${currentProduct.description}\n\n${link}`;
 
-  tg.showPopup({
-    title: "Поделиться товаром",
-    message: "Скопируй ссылку и отправь другу в Telegram:",
-    buttons: [
-      { id: "copy", type: "ok", text: "📋 Скопировать ссылку" },
-      { type: "cancel", text: "Закрыть" }
-    ]
-  });
+    tg.showPopup({
+        title: "Поделиться товаром",
+        message: "Скопируй ссылку и отправь другу в Telegram:",
+        buttons: [
+            { id: "copy", type: "ok", text: "📋 Скопировать ссылку" },
+            { type: "cancel", text: "Закрыть" }
+        ]
+    });
 
-  // Обработчик кнопок
-  window.Telegram.WebApp.onEvent('popupClosed', function (event) {
-    if (event.button_id === "copy") {
-      navigator.clipboard.writeText(link);
-      tg.showAlert("Ссылка скопирована!");
-    }
-  });
+    // Обработчик кнопок
+    window.Telegram.WebApp.onEvent('popupClosed', function (event) {
+        if (event.button_id === "copy") {
+            navigator.clipboard.writeText(link);
+            tg.showAlert("Ссылка скопирована!");
+        }
+    });
 }
 
 function sendToFriend() {
-  if (!currentProduct) return;
+    if (!currentProduct) return;
 
-  tg.showPopup({
-    title: "Отправить другу",
-    message: "Введи @username друга (например, @rustem)",
-    buttons: [
-      { id: "send", type: "ok", text: "Отправить" },
-      { type: "cancel" },
-    ]
-  });
-
-  // ⚠️ Примерно, если хочешь сделать ввод — можно позже заменить на форму Telegram WebAppInput
-  // Для теста отправим прямо себе:
-  const chatId = tg.initDataUnsafe?.user?.id; // пока отправляем самому себе
-
-  fetch("/api/share", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      product_id: currentProduct.id
-    })
-  })
-    .then(res => res.json())
-    .then(data => {
-      tg.showAlert("✅ Товар отправлен!");
-    })
-    .catch(err => {
-      console.error(err);
-      tg.showAlert("❌ Ошибка при отправке");
+    tg.showPopup({
+        title: "Отправить другу",
+        message: "Введи @username друга (например, @rustem)",
+        buttons: [
+            { id: "send", type: "ok", text: "Отправить" },
+            { type: "cancel" },
+        ]
     });
+
+    // ⚠️ Примерно, если хочешь сделать ввод — можно позже заменить на форму Telegram WebAppInput
+    // Для теста отправим прямо себе:
+    const chatId = tg.initDataUnsafe?.user?.id; // пока отправляем самому себе
+
+    fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            chat_id: chatId,
+            product_id: currentProduct.id
+        })
+    })
+        .then(res => res.json())
+        .then(data => {
+            tg.showAlert("✅ Товар отправлен!");
+        })
+        .catch(err => {
+            console.error(err);
+            tg.showAlert("❌ Ошибка при отправке");
+        });
 }
+
 
